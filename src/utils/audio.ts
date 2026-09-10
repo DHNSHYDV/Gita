@@ -1,53 +1,79 @@
 // Authentic Audio Engine for Gita Shlokas:
 // 1. Pristine Sanskrit Chanting (Authentic recorded Vedic Temple Audio for all 701 verses)
-// 2. Regional Accent Speech Engine (Native Telugu, Hindi, Tamil, Kannada, and Indian English enunciation)
+// 2. Regional Accent Native Android Speech Engine (Native Telugu, Hindi, Tamil, Kannada, and Indian English enunciation)
+
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
+import { Capacitor } from '@capacitor/core';
+
+export type AudioPlayMode = 'chant' | 'speech' | null;
 
 class SacredAudioPlayer {
   private isPlaying: boolean = false;
-  private currentMode: 'chant' | 'speech' | null = null;
+  private isLoading: boolean = false;
+  private currentMode: AudioPlayMode = null;
   private audioEl: HTMLAudioElement | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
-  private onStateChange: ((playing: boolean, mode: 'chant' | 'speech' | null) => void) | null = null;
+  private onStateChange: ((playing: boolean, mode: AudioPlayMode, loading?: boolean) => void) | null = null;
+  private activeAbortController: AbortController | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
-      this.audioEl = new Audio();
-      this.audioEl.preload = 'auto';
-
-      this.audioEl.onplay = () => {
-        this.isPlaying = true;
-        this.currentMode = 'chant';
-        this.notifyState();
-      };
-
-      this.audioEl.onended = () => {
-        this.stop();
-      };
-
-      this.audioEl.onerror = () => {
-        // If MP3 fails (e.g. offline), stop gracefully
-        this.stop();
-      };
-
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.onvoiceschanged = () => {
-          // Voices preloaded
-        };
-      }
+      this.initAudioElement();
     }
   }
 
-  public setListener(listener: (playing: boolean, mode: 'chant' | 'speech' | null) => void) {
+  private initAudioElement(): void {
+    if (this.audioEl) {
+      try {
+        this.audioEl.pause();
+        this.audioEl.src = '';
+      } catch {
+        // Ignore
+      }
+    }
+
+    this.audioEl = new Audio();
+    this.audioEl.preload = 'auto';
+    this.audioEl.crossOrigin = 'anonymous';
+
+    this.audioEl.onplay = () => {
+      this.isLoading = false;
+      this.isPlaying = true;
+      this.currentMode = 'chant';
+      this.notifyState();
+    };
+
+    this.audioEl.onplaying = () => {
+      this.isLoading = false;
+      this.isPlaying = true;
+      this.notifyState();
+    };
+
+    this.audioEl.onwaiting = () => {
+      this.isLoading = true;
+      this.notifyState();
+    };
+
+    this.audioEl.onended = () => {
+      this.stop();
+    };
+
+    this.audioEl.onerror = () => {
+      // Audio element error handled in caller
+    };
+  }
+
+  public setListener(listener: (playing: boolean, mode: AudioPlayMode, loading?: boolean) => void) {
     this.onStateChange = listener;
   }
 
   private notifyState() {
     if (this.onStateChange) {
-      this.onStateChange(this.isPlaying, this.currentMode);
+      this.onStateChange(this.isPlaying, this.currentMode, this.isLoading);
     }
   }
 
-  // Tactile page turn audio (soothing paper rustle, no electronic beep)
+  // Tactile page turn audio (soothing subtle parchment rustle)
   public playPageTurn(): void {
     try {
       const AudioCtxClass =
@@ -79,47 +105,84 @@ class SacredAudioPlayer {
   }
 
   // 1. Play Authentic Vedic Sanskrit Temple Chanting MP3
-  public playAuthenticChant(chapterNumber: number, verseNumber: number): void {
+  public async playAuthenticChant(chapterNumber: number, verseNumber: number, fallbackSanskritText?: string): Promise<void> {
     this.stop();
 
-    const audioUrl = `https://raw.githubusercontent.com/nikhilsi/gitavani/main/android/GitaVani/app/src/main/assets/audio/BG${chapterNumber}.${verseNumber}.mp3`;
+    this.isLoading = true;
+    this.isPlaying = true;
+    this.currentMode = 'chant';
+    this.notifyState();
 
-    if (!this.audioEl) {
-      this.audioEl = new Audio();
-    }
+    const cdnUrl = `https://cdn.jsdelivr.net/gh/nikhilsi/gitavani@main/android/GitaVani/app/src/main/assets/audio/BG${chapterNumber}.${verseNumber}.mp3`;
 
-    this.audioEl.src = audioUrl;
-    this.audioEl
-      .play()
-      .then(() => {
+    // Attempt 1: Direct HTML5 streaming from Cloudflare/jsDelivr edge
+    try {
+      if (!this.audioEl) {
+        this.initAudioElement();
+      }
+
+      if (this.audioEl) {
+        this.audioEl.src = cdnUrl;
+        await this.audioEl.play();
+        this.isLoading = false;
         this.isPlaying = true;
         this.currentMode = 'chant';
         this.notifyState();
-      })
-      .catch(() => {
-        this.stop();
+        return;
+      }
+    } catch (e) {
+      console.warn('Direct audio stream attempt failed, trying blob stream...', e);
+    }
+
+    // Attempt 2: Fetch as Blob to completely bypass any WebView header/CORS restrictions
+    try {
+      this.activeAbortController = new AbortController();
+      const res = await fetch(cdnUrl, {
+        signal: this.activeAbortController.signal,
+        cache: 'force-cache',
       });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        if (!this.audioEl) this.initAudioElement();
+
+        if (this.audioEl) {
+          this.audioEl.src = blobUrl;
+          await this.audioEl.play();
+          this.isLoading = false;
+          this.isPlaying = true;
+          this.currentMode = 'chant';
+          this.notifyState();
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Blob audio fetch failed:', e);
+    }
+
+    // Attempt 3: Offline Sanskrit Recitation using Native TTS
+    if (fallbackSanskritText) {
+      this.isLoading = false;
+      await this.playRegionalSpeech(fallbackSanskritText, 'sa', 0.82);
+      return;
+    }
+
+    this.stop();
   }
 
   // 2. Play Regional Accent Speech for Translations & Meanings
-  public playRegionalSpeech(text: string, language: string): void {
+  public async playRegionalSpeech(text: string, language: string, speechRate: number = 0.88): Promise<void> {
     this.stop();
-
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      return;
-    }
 
     // Clean text of verse numbers and special symbols
     const cleanText = text
       .replace(/[0-9]+\.[0-9]+/g, '')
       .replace(/[|।॥✦🕉️]/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
 
     if (!cleanText) return;
-
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.88; // Reverent, clear, contemplative tempo
-    utterance.pitch = 1.0;
 
     // Map language to regional BCP-47 locale
     const localeMap: Record<string, string> = {
@@ -128,66 +191,146 @@ class SacredAudioPlayer {
       ta: 'ta-IN', // Tamil (India)
       kn: 'kn-IN', // Kannada (India)
       en: 'en-IN', // Indian English
+      sa: 'hi-IN', // Sanskrit enunciation via high-quality Hindi/Sanskrit TTS
     };
 
     const targetLocale = localeMap[language] || 'hi-IN';
-    utterance.lang = targetLocale;
 
-    // Pick best regional voice if available
-    const voices = window.speechSynthesis.getVoices();
-    let bestVoice = voices.find(
-      (v) => v.lang === targetLocale || v.lang.replace('_', '-').startsWith(targetLocale)
-    );
+    this.isPlaying = true;
+    this.currentMode = 'speech';
+    this.isLoading = false;
+    this.notifyState();
 
-    if (!bestVoice) {
-      bestVoice = voices.find((v) => v.lang.startsWith(targetLocale.slice(0, 2)));
+    // 1. If Native Android (Capacitor), use Native TextToSpeech Java API
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await TextToSpeech.stop();
+        await TextToSpeech.speak({
+          text: cleanText,
+          lang: targetLocale,
+          rate: speechRate,
+          pitch: 1.0,
+          volume: 1.0,
+          category: 'playback',
+        });
+        this.stop();
+        return;
+      } catch (nativeErr) {
+        console.warn('Native TTS error, trying fallback locale:', nativeErr);
+        try {
+          // If specific locale failed on user's device, try fallback to Hindi/English
+          await TextToSpeech.speak({
+            text: cleanText,
+            lang: 'hi-IN',
+            rate: speechRate,
+            pitch: 1.0,
+            volume: 1.0,
+            category: 'playback',
+          });
+          this.stop();
+          return;
+        } catch (fallbackErr) {
+          console.error('All native TTS attempts failed:', fallbackErr);
+        }
+      }
     }
-    if (!bestVoice) {
-      bestVoice = voices.find((v) => v.lang.includes('IN'));
+
+    // 2. Fallback to Web Speech API (for Browser / Desktop / PWA)
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = speechRate;
+        utterance.pitch = 1.0;
+        utterance.lang = targetLocale;
+
+        const voices = window.speechSynthesis.getVoices();
+        let bestVoice = voices.find(
+          (v) => v.lang === targetLocale || v.lang.replace('_', '-').startsWith(targetLocale)
+        );
+
+        if (!bestVoice) {
+          bestVoice = voices.find((v) => v.lang.startsWith(targetLocale.slice(0, 2)));
+        }
+        if (!bestVoice) {
+          bestVoice = voices.find((v) => v.lang.includes('IN'));
+        }
+
+        if (bestVoice) {
+          utterance.voice = bestVoice;
+        }
+
+        utterance.onstart = () => {
+          this.isPlaying = true;
+          this.currentMode = 'speech';
+          this.notifyState();
+        };
+
+        utterance.onend = () => {
+          this.stop();
+        };
+
+        utterance.onerror = () => {
+          this.stop();
+        };
+
+        this.currentUtterance = utterance;
+        window.speechSynthesis.speak(utterance);
+        return;
+      } catch (webErr) {
+        console.error('Web Speech API error:', webErr);
+      }
     }
 
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
-
-    utterance.onstart = () => {
-      this.isPlaying = true;
-      this.currentMode = 'speech';
-      this.notifyState();
-    };
-
-    utterance.onend = () => {
-      this.stop();
-    };
-
-    utterance.onerror = () => {
-      this.stop();
-    };
-
-    this.currentUtterance = utterance;
-    window.speechSynthesis.speak(utterance);
+    this.stop();
   }
 
   // Stop any currently playing chant or speech
   public stop(): void {
+    if (this.activeAbortController) {
+      try {
+        this.activeAbortController.abort();
+      } catch {
+        // Ignore
+      }
+      this.activeAbortController = null;
+    }
+
     if (this.audioEl) {
-      this.audioEl.pause();
-      this.audioEl.currentTime = 0;
+      try {
+        this.audioEl.pause();
+        this.audioEl.currentTime = 0;
+      } catch {
+        // Ignore
+      }
     }
+
+    if (Capacitor.isNativePlatform()) {
+      TextToSpeech.stop().catch(() => {});
+    }
+
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+      try {
+        window.speechSynthesis.cancel();
+      } catch {
+        // Ignore
+      }
     }
+
     this.isPlaying = false;
+    this.isLoading = false;
     this.currentMode = null;
     this.notifyState();
   }
 
   // Smart Toggle: Plays authentic chant or stops
-  public toggleChant(chapterNumber: number, verseNumber: number): void {
+  public toggleChant(chapterNumber: number, verseNumber: number, fallbackSanskritText?: string): void {
     if (this.isPlaying && this.currentMode === 'chant') {
       this.stop();
     } else {
-      this.playAuthenticChant(chapterNumber, verseNumber);
+      this.playAuthenticChant(chapterNumber, verseNumber, fallbackSanskritText);
     }
   }
 
@@ -204,7 +347,11 @@ class SacredAudioPlayer {
     return this.isPlaying;
   }
 
-  public getMode(): 'chant' | 'speech' | null {
+  public isLoadingAudio(): boolean {
+    return this.isLoading;
+  }
+
+  public getMode(): AudioPlayMode {
     return this.currentMode;
   }
 }

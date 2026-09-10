@@ -1,7 +1,7 @@
 {
   "name": "gita-app",
   "private": true,
-  "version": "1.4.3",
+  "version": "1.4.4",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^6.1.0",
     "@capacitor/app": "^7.1.2",
     "@capacitor/local-notifications": "^7.0.7",
     "@capacitor/status-bar": "^7.0.6",

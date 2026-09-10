@@ -25,6 +25,7 @@ interface VerseCardProps {
   language: Language;
   textSize: TextSize;
   isPlaying?: boolean;
+  isAudioLoading?: boolean;
   audioMode?: 'chant' | 'speech' | null;
   bookmarked?: boolean;
   copied?: boolean;
@@ -50,6 +51,7 @@ const VerseCard: React.FC<VerseCardProps> = ({
   language,
   textSize,
   isPlaying = false,
+  isAudioLoading = false,
   audioMode = null,
   bookmarked = false,
   copied = false,
@@ -123,15 +125,23 @@ const VerseCard: React.FC<VerseCardProps> = ({
           }`}
         >
           {isPlaying && audioMode === 'chant' ? (
-            <div className="flex items-center gap-0.5 h-5">
-              <span className="w-1 h-3 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-1 h-4 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-1 h-2 bg-current rounded-full animate-bounce" />
-            </div>
+            isAudioLoading ? (
+              <div className="flex items-center justify-center h-5">
+                <span className="w-2 h-2 rounded-full bg-current animate-ping" />
+              </div>
+            ) : (
+              <div className="flex items-center gap-0.5 h-5">
+                <span className="w-1 h-3 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-1 h-4 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-1 h-2 bg-current rounded-full animate-bounce" />
+              </div>
+            )
           ) : (
             <Volume2 className="w-5 h-5" strokeWidth={1.75} />
           )}
-          <span className="text-[11px] mt-1 font-medium">{isPlaying && audioMode === 'chant' ? stopLabel : 'Chant'}</span>
+          <span className="text-[11px] mt-1 font-medium">
+            {isPlaying && audioMode === 'chant' ? (isAudioLoading ? 'Buffering...' : stopLabel) : 'Chant'}
+          </span>
         </motion.button>
 
         <motion.button
@@ -297,6 +307,7 @@ export const ShlokaScreen: React.FC = () => {
   } = useApp();
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isAudioLoading, setIsAudioLoading] = useState<boolean>(false);
   const [audioMode, setAudioMode] = useState<'chant' | 'speech' | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [turnDirection, setTurnDirection] = useState<'next' | 'prev'>('next');
@@ -317,9 +328,10 @@ export const ShlokaScreen: React.FC = () => {
 
   // Handle audio state
   useEffect(() => {
-    audioPlayer.setListener((playing: boolean, mode: 'chant' | 'speech' | null) => {
+    audioPlayer.setListener((playing: boolean, mode: 'chant' | 'speech' | null, loading?: boolean) => {
       setIsPlaying(playing);
       setAudioMode(mode);
+      setIsAudioLoading(!!loading);
     });
     return () => {
       audioPlayer.setListener(() => {});
@@ -366,9 +378,10 @@ export const ShlokaScreen: React.FC = () => {
     }
   };
 
-  // Toggle authentic Sanskrit temple chanting
+  // Toggle authentic Sanskrit temple chanting with fallback
   const handlePlayAudio = () => {
-    audioPlayer.toggleChant(selectedChapter, selectedVerse);
+    const verseData = getVerse(selectedChapter, selectedVerse);
+    audioPlayer.toggleChant(selectedChapter, selectedVerse, verseData.sanskrit);
   };
 
   // Toggle regional voice recitation of translation
@@ -494,6 +507,7 @@ export const ShlokaScreen: React.FC = () => {
             language={language}
             textSize={textSize}
             isPlaying={isPlaying}
+            isAudioLoading={isAudioLoading}
             audioMode={audioMode}
             bookmarked={bookmarked}
             copied={copied}

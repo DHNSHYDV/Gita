@@ -12,6 +12,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
+        }
         applySystemBarsTheme();
     }
 
@@ -20,6 +23,7 @@ public class MainActivity extends BridgeActivity {
         super.onResume();
         applySystemBarsTheme();
         if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
             ViewCompat.requestApplyInsets(getBridge().getWebView());
         }
     }
