@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Language, TextSize, ThemeMode, ScreenType } from '../types';
 import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
+import { updateNativeStatusBar } from '../utils/native';
 
 interface AppContextType {
   language: Language;
@@ -11,6 +12,7 @@ interface AppContextType {
   setTheme: (theme: ThemeMode) => void;
   currentScreen: ScreenType;
   setCurrentScreen: (screen: ScreenType) => void;
+  goBack: () => boolean;
   selectedChapter: number;
   setSelectedChapter: (chapter: number) => void;
   selectedVerse: number;
@@ -57,8 +59,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   // Start on welcome
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('welcome');
+  const [currentScreen, setCurrentScreenState] = useState<ScreenType>('welcome');
+  const [navStack, setNavStack] = useState<ScreenType[]>(['welcome']);
   const [openSettingsFromScreen, setOpenSettingsFromScreen] = useState<ScreenType | null>(null);
+
+  const setCurrentScreen = (screen: ScreenType) => {
+    setCurrentScreenState(screen);
+    setNavStack(prev => {
+      if (prev[prev.length - 1] === screen) return prev;
+      if (screen === 'home') return ['home'];
+      return [...prev.slice(-12), screen];
+    });
+  };
+
+  const goBack = (): boolean => {
+    // 1. Close daily verse modal first if open
+    if (dailyVerseModalOpen) {
+      setDailyVerseModalOpen(false);
+      return true;
+    }
+
+    // 2. If in settings, return to screen that opened it
+    if (currentScreen === 'settings') {
+      if (openSettingsFromScreen) {
+        const target = openSettingsFromScreen;
+        setOpenSettingsFromScreen(null);
+        setCurrentScreen(target);
+        return true;
+      }
+      setCurrentScreen('more');
+      return true;
+    }
+
+    // 3. Pop navigation stack if history exists
+    if (navStack.length > 1) {
+      const nextStack = [...navStack];
+      nextStack.pop();
+      const previousScreen = nextStack[nextStack.length - 1];
+      setNavStack(nextStack);
+      setCurrentScreenState(previousScreen);
+      return true;
+    }
+
+    // 4. Return to home if on secondary screen
+    if (currentScreen !== 'home' && currentScreen !== 'welcome') {
+      setCurrentScreenState('home');
+      setNavStack(['home']);
+      return true;
+    }
+
+    // Base screen (home or welcome)
+    return false;
+  };
 
   // User Profile Name (default "Dhanush" matching storyboard screen 3)
   const [userName, setUserNameState] = useState<string>(() => {
@@ -124,6 +176,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } else {
       document.documentElement.classList.remove('dark');
     }
+    updateNativeStatusBar(tMode);
   };
 
   const setLastRead = (pos: { chapter: number; verse: number }) => {
@@ -172,6 +225,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTheme,
         currentScreen,
         setCurrentScreen,
+        goBack,
         selectedChapter,
         setSelectedChapter,
         selectedVerse,

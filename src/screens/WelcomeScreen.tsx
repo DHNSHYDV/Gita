@@ -27,7 +27,12 @@ export const WelcomeScreen: React.FC = () => {
       </div>
 
       {/* Top Header: Gita Title & Subtitle */}
-      <div className="relative z-10 w-full pt-12 md:pt-14 px-6 text-center">
+      <div className="relative z-10 w-full pt-10 md:pt-12 px-6 flex flex-col items-center text-center">
+        <img
+          src="/logo.png"
+          alt="Gita Sacred Emblem"
+          className="w-16 h-16 rounded-2xl shadow-xl shadow-black/25 mb-3 border border-[#E8D4B4]/60"
+        />
         <h1 className="font-serif text-5xl md:text-6xl font-bold tracking-tight text-[#22180F] drop-shadow-xs">
           Gita
         </h1>

@@ -12,6 +12,13 @@ const config: CapacitorConfig = {
       keystorePath: undefined,
       releaseType: 'AAB'
     }
+  },
+  plugins: {
+    StatusBar: {
+      overlaysWebView: false,
+      style: 'LIGHT',
+      backgroundColor: '#F6F1EA'
+    }
   }
 };
 

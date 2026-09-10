@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import { MobileFrame } from './components/MobileFrame';
 import { BottomNav } from './components/BottomNav';
@@ -15,9 +15,26 @@ import { BookmarksScreen } from './screens/BookmarksScreen';
 import { DevoteeStreaksScreen } from './screens/DevoteeStreaksScreen';
 import { MoreScreen } from './screens/MoreScreen';
 import { DailyVerseModal } from './screens/DailyVerseModal';
+import { registerHardwareBackListener } from './utils/native';
 
 export const AppContent: React.FC = () => {
-  const { currentScreen } = useApp();
+  const { currentScreen, goBack } = useApp();
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 2000);
+  };
+
+  // Register Android Hardware Back Button & Edge Swipe Gesture Listener
+  useEffect(() => {
+    const unregister = registerHardwareBackListener(goBack, showToast);
+    return () => {
+      unregister();
+    };
+  }, [goBack]);
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -58,6 +75,11 @@ export const AppContent: React.FC = () => {
       {renderScreen()}
       {showBottomNav && <BottomNav />}
       <DailyVerseModal />
+      {toastMessage && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-[#2A241E]/95 dark:bg-[#FAF7F2]/95 text-white dark:text-[#1F1912] text-xs font-semibold shadow-2xl backdrop-blur-md animate-fadeIn pointer-events-none tracking-wide">
+          {toastMessage}
+        </div>
+      )}
     </MobileFrame>
   );
 };

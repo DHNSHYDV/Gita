@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Flame, Crown, User, Calendar, Award, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Flame, Crown, User, Calendar, Award, Sparkles, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getLeaderboardData, getStoredStreak } from '../data/db';
 
 export const DevoteeStreaksScreen: React.FC = () => {
-  const { userName } = useApp();
+  const { userName, goBack } = useApp();
   const [activeTab, setActiveTab] = useState<'top' | 'my' | 'community'>('top');
   const [period, setPeriod] = useState<'today' | 'week' | 'all'>('today');
 
@@ -14,10 +14,19 @@ export const DevoteeStreaksScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 select-none transition-colors animate-fadeIn">
       {/* Top Header */}
-      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-5 pt-6 pb-2 border-b border-[#EAE2D5] dark:border-[#28221B]">
-        <h1 className="font-semibold text-xl text-[#2A241E] dark:text-[#FAF7F2]">
-          Devotee Streaks
-        </h1>
+      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 pt-4 pb-2 border-b border-[#EAE2D5] dark:border-[#28221B]">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goBack}
+            className="p-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors text-[#2A241E] dark:text-[#FAF7F2]"
+            title="Back"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <h1 className="font-semibold text-xl text-[#2A241E] dark:text-[#FAF7F2]">
+            Devotee Streaks
+          </h1>
+        </div>
 
         {/* 3 Main Tabs: Top Readers | My Streak | Community */}
         <div className="flex items-center gap-6 mt-4">

@@ -10,6 +10,7 @@ import {
   Star,
   Share2,
   ChevronRight,
+  ChevronLeft,
   Sparkles,
   Sun,
   X,
@@ -31,6 +32,7 @@ export const MoreScreen: React.FC = () => {
     navigateToShloka,
     userName,
     isGoogleLinked,
+    goBack,
     t,
   } = useApp();
 
@@ -69,7 +71,14 @@ export const MoreScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 transition-colors">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-5 pt-6 pb-4 border-b border-[#EAE2D5] dark:border-[#28221B]">
+      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 py-4 flex items-center gap-2 border-b border-[#EAE2D5] dark:border-[#28221B]">
+        <button
+          onClick={goBack}
+          className="p-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors text-[#2A241E] dark:text-[#FAF7F2]"
+          title="Back"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
         <h1 className="font-semibold text-xl text-[#2A241E] dark:text-[#FAF7F2]">
           {t.moreTitle}
         </h1>
@@ -303,7 +312,7 @@ export const MoreScreen: React.FC = () => {
 
         {/* Footer Version Info */}
         <div className="text-center pt-2 pb-4 text-xs text-[#9E9281] dark:text-[#6F6557]">
-          <p>Gita v1.2.1 (Build 4)</p>
+          <p>Gita v1.3.0 (Build 5)</p>
           <p className="mt-0.5">Designed for Google Play Store</p>
         </div>
       </main>

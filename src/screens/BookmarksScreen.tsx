@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Bookmark as BookmarkIcon, ChevronRight, Search, Trash2 } from 'lucide-react';
+import { Bookmark as BookmarkIcon, ChevronRight, ChevronLeft, Search, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CHAPTERS_DATA } from '../data/chapters';
 import { getVerse } from '../data/verses';
 
 export const BookmarksScreen: React.FC = () => {
-  const { language, bookmarks, toggleBookmark, navigateToShloka, t } = useApp();
+  const { language, bookmarks, toggleBookmark, navigateToShloka, goBack, t } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
 
   // Map bookmark IDs ("2.47") to verse data & chapter title
@@ -38,10 +38,19 @@ export const BookmarksScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 transition-colors">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-5 pt-6 pb-4 flex items-center justify-between border-b border-[#EAE2D5] dark:border-[#28221B]">
-        <h1 className="font-semibold text-xl text-[#2A241E] dark:text-[#FAF7F2]">
-          {t.myBookmarks}
-        </h1>
+      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b border-[#EAE2D5] dark:border-[#28221B]">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goBack}
+            className="p-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors text-[#2A241E] dark:text-[#FAF7F2]"
+            title="Back"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <h1 className="font-semibold text-xl text-[#2A241E] dark:text-[#FAF7F2]">
+            {t.myBookmarks}
+          </h1>
+        </div>
 
         <div className="relative flex items-center">
           <input

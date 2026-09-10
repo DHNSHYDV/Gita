@@ -172,6 +172,7 @@ export const ShlokaScreen: React.FC = () => {
     textSize,
     setTextSize,
     setCurrentScreen,
+    goBack,
     setOpenSettingsFromScreen,
     isBookmarked,
     toggleBookmark,
@@ -318,7 +319,7 @@ export const ShlokaScreen: React.FC = () => {
       {/* Top Header */}
       <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-[#EAE2D5] dark:border-[#28221B]">
         <button
-          onClick={() => setCurrentScreen('chapters')}
+          onClick={goBack}
           className="p-2 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
           title="Back"
         >

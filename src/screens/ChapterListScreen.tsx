@@ -4,16 +4,16 @@ import { useApp } from '../context/AppContext';
 import { CHAPTERS_DATA } from '../data/chapters';
 
 export const ChapterListScreen: React.FC = () => {
-  const { language, setCurrentScreen, navigateToShloka, t } = useApp();
+  const { language, goBack, navigateToShloka, t } = useApp();
 
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 transition-colors">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 py-4 flex items-center gap-3 border-b border-[#EAE2D5] dark:border-[#28221B]">
         <button
-          onClick={() => setCurrentScreen('home')}
+          onClick={goBack}
           className="p-2 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
-          title="Back to Home"
+          title="Back"
         >
           <ChevronLeft className="w-6 h-6 text-[#2A241E] dark:text-[#FAF7F2]" />
         </button>
