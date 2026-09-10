@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gita</string>
+    <string name="title_activity_main">Gita</string>
+    <string name="package_name">com.gita.wisdom</string>
+    <string name="custom_url_scheme">com.gita.wisdom</string>
+</resources>

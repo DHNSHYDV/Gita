@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <radialGradient id="eyeGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2D006B" />
+      <stop offset="35%" stop-color="#0288D1" />
+      <stop offset="70%" stop-color="#4CAF50" />
+      <stop offset="90%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#8D6E63" />
+    </radialGradient>
+    <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C59341"/>
+      <stop offset="100%" stop-color="#674A1A"/>
+    </linearGradient>
+  </defs>
+  <!-- Feather Stem -->
+  <path d="M20 90 Q 45 60 70 20" stroke="url(#stemGrad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <!-- Feather Barbs (Left & Right) -->
+  <path d="M68 22 Q 55 15 42 20 Q 30 28 35 42 Q 45 45 65 30" fill="#2E7D32" opacity="0.8"/>
+  <path d="M72 26 Q 82 20 90 32 Q 88 46 72 45 Q 65 42 70 30" fill="#388E3C" opacity="0.8"/>
+  <!-- Eye -->
+  <ellipse cx="62" cy="30" rx="16" ry="20" transform="rotate(-30 62 30)" fill="url(#eyeGrad)"/>
+  <ellipse cx="62" cy="30" rx="9" ry="12" transform="rotate(-30 62 30)" fill="#0D47A1"/>
+  <ellipse cx="62" cy="30" rx="4" ry="6" transform="rotate(-30 62 30)" fill="#311B92"/>
+  <ellipse cx="61" cy="28" rx="2" ry="3" transform="rotate(-30 62 30)" fill="#80D8FF"/>
+</svg>
