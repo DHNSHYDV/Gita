@@ -4,6 +4,7 @@ import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
 import { updateNativeStatusBar } from '../utils/native';
 import { supabase, fetchUserProfile, syncDevoteeProgress } from '../utils/supabase';
 import { getStoredStreak } from '../data/db';
+import { scheduleDailyMorningQuotes } from '../utils/notifications';
 
 interface AppContextType {
   language: Language;
@@ -168,7 +169,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [dailyVerseModalOpen, setDailyVerseModalOpen] = useState<boolean>(false);
-  const [dailyReminderEnabled, setDailyReminderEnabled] = useState<boolean>(true);
+  const [dailyReminderEnabled, setDailyReminderEnabledState] = useState<boolean>(() => {
+    const saved = localStorage.getItem('gita_daily_reminder');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  const setDailyReminderEnabled = useCallback((enabled: boolean) => {
+    setDailyReminderEnabledState(enabled);
+    localStorage.setItem('gita_daily_reminder', JSON.stringify(enabled));
+  }, []);
 
   const [lastRead, setLastReadState] = useState<{ chapter: number; verse: number }>(() => {
     const saved = localStorage.getItem('gita_lastRead');
@@ -367,6 +376,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Automatically schedule daily early morning Gita quotes (6:30 AM) in user's selected language
+  useEffect(() => {
+    scheduleDailyMorningQuotes(language, dailyReminderEnabled);
+  }, [language, dailyReminderEnabled]);
 
   return (
     <AppContext.Provider

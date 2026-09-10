@@ -17,6 +17,7 @@ import { MoreScreen } from './screens/MoreScreen';
 import { DailyVerseModal } from './screens/DailyVerseModal';
 import { UpdateModal } from './components/UpdateModal';
 import { registerHardwareBackListener } from './utils/native';
+import { registerNotificationClickListener } from './utils/notifications';
 import { App as CapApp } from '@capacitor/app';
 import { handleAuthCallback, fetchUserProfile } from './utils/supabase';
 
@@ -54,6 +55,7 @@ export const AppContent: React.FC = () => {
     setIsGoogleLinked,
     setOnboardingCompleted,
     setCurrentScreen,
+    navigateToShloka,
     toastMessage,
     showToast,
   } = useApp();
@@ -65,6 +67,16 @@ export const AppContent: React.FC = () => {
       unregister();
     };
   }, [goBack]);
+
+  // Listen to daily early morning wisdom notification clicks to open verse
+  useEffect(() => {
+    const unregister = registerNotificationClickListener((chapter, verse) => {
+      navigateToShloka(chapter, verse);
+    });
+    return () => {
+      unregister();
+    };
+  }, [navigateToShloka]);
 
   // Deep Linking Handler for Mobile OAuth (com.gita.wisdom://login-callback)
   useEffect(() => {
