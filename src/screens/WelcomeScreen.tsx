@@ -3,7 +3,15 @@ import { ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const WelcomeScreen: React.FC = () => {
-  const { setCurrentScreen, t } = useApp();
+  const { setCurrentScreen, onboardingCompleted, t } = useApp();
+
+  const handleBegin = () => {
+    if (onboardingCompleted) {
+      setCurrentScreen('home');
+    } else {
+      setCurrentScreen('onboarding-language');
+    }
+  };
 
   return (
     <div className="relative w-full h-full min-h-screen overflow-hidden flex flex-col justify-between items-center select-none animate-fadeIn">
@@ -37,7 +45,7 @@ export const WelcomeScreen: React.FC = () => {
       <div className="relative z-10 w-full max-w-[290px] px-4 pb-12 flex flex-col items-center">
         {/* "Begin the Journey →" Pill Button */}
         <button
-          onClick={() => setCurrentScreen('home')}
+          onClick={handleBegin}
           className="w-full py-3.5 px-6 rounded-full bg-[#F5E6CC] hover:bg-[#EEDBBF] active:scale-95 text-[#2A1D11] font-semibold text-sm md:text-base shadow-xl shadow-black/30 flex items-center justify-center gap-2 transition-all duration-200"
         >
           <span>{t.beginJourney}</span>

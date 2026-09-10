@@ -27,6 +27,8 @@ export const MoreScreen: React.FC = () => {
     setDailyVerseModalOpen,
     readingHistory,
     navigateToShloka,
+    userName,
+    isGoogleLinked,
     t,
   } = useApp();
 
@@ -79,9 +81,16 @@ export const MoreScreen: React.FC = () => {
           </div>
 
           <div>
-            <h2 className="font-bold text-base text-[#2A241E] dark:text-[#FAF7F2] tracking-tight">
-              {t.seekLearnLive}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-bold text-base text-[#2A241E] dark:text-[#FAF7F2] tracking-tight">
+                {userName || t.seekLearnLive}
+              </h2>
+              {isGoogleLinked && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  Google Linked
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[#8A7E6C] dark:text-[#9F9382] mt-0.5">
               {t.closerToBetterYou}
             </p>
@@ -99,6 +108,20 @@ export const MoreScreen: React.FC = () => {
               <Sun className="w-5 h-5 text-[#966C28] dark:text-[#E8C581] group-hover:scale-110 transition-transform" />
               <span className="text-sm font-semibold text-[#2A241E] dark:text-[#FAF7F2]">
                 {t.todayVerse}
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#B0A595] dark:text-[#6F6455]" />
+          </div>
+
+          {/* Intro & Onboarding Tour */}
+          <div
+            onClick={() => setCurrentScreen('welcome')}
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#F3EBE0] dark:hover:bg-[#25201A] transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-[#8A7E6C] dark:text-[#9F9382] group-hover:text-[#966C28]" />
+              <span className="text-sm font-medium text-[#2A241E] dark:text-[#FAF7F2]">
+                Welcome & Onboarding Tour
               </span>
             </div>
             <ChevronRight className="w-4 h-4 text-[#B0A595] dark:text-[#6F6455]" />

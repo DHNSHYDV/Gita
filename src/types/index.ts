@@ -39,6 +39,10 @@ export interface BookmarkItem {
 
 export type ScreenType = 
   | 'welcome'
+  | 'onboarding-language'
+  | 'onboarding-username'
+  | 'onboarding-auth'
+  | 'onboarding-success'
   | 'home'
   | 'chapters'
   | 'shloka'

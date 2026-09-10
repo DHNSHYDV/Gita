@@ -3,6 +3,10 @@ import { useApp } from './context/AppContext';
 import { MobileFrame } from './components/MobileFrame';
 import { BottomNav } from './components/BottomNav';
 import { WelcomeScreen } from './screens/WelcomeScreen';
+import { OnboardingLanguage } from './screens/OnboardingLanguage';
+import { OnboardingUsername } from './screens/OnboardingUsername';
+import { OnboardingAuth } from './screens/OnboardingAuth';
+import { OnboardingSuccess } from './screens/OnboardingSuccess';
 import { HomeScreen } from './screens/HomeScreen';
 import { ChapterListScreen } from './screens/ChapterListScreen';
 import { ShlokaScreen } from './screens/ShlokaScreen';
@@ -18,6 +22,14 @@ export const AppContent: React.FC = () => {
     switch (currentScreen) {
       case 'welcome':
         return <WelcomeScreen />;
+      case 'onboarding-language':
+        return <OnboardingLanguage />;
+      case 'onboarding-username':
+        return <OnboardingUsername />;
+      case 'onboarding-auth':
+        return <OnboardingAuth />;
+      case 'onboarding-success':
+        return <OnboardingSuccess />;
       case 'home':
         return <HomeScreen />;
       case 'chapters':

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Language, TextSize, ThemeMode, ScreenType } from '../types';
 import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
-import { CHAPTERS_DATA } from '../data/chapters';
 
 interface AppContextType {
   language: Language;
@@ -30,12 +29,17 @@ interface AppContextType {
   t: UIStrings;
   openSettingsFromScreen: ScreenType | null;
   setOpenSettingsFromScreen: (screen: ScreenType | null) => void;
+  userName: string;
+  setUserName: (name: string) => void;
+  isGoogleLinked: boolean;
+  setIsGoogleLinked: (linked: boolean) => void;
+  onboardingCompleted: boolean;
+  setOnboardingCompleted: (completed: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default to Telugu ('te') as pictured in user's design!
   const [language, setLanguageState] = useState<Language>(() => {
     return (localStorage.getItem('gita_language') as Language) || 'te';
   });
@@ -48,15 +52,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (localStorage.getItem('gita_theme') as ThemeMode) || 'light';
   });
 
-  // Current navigation screen: starts on 'welcome' (screen 1 in reference mockup)
+  const [onboardingCompleted, setOnboardingCompletedState] = useState<boolean>(() => {
+    return localStorage.getItem('gita_onboarding_completed') === 'true';
+  });
+
+  // Start on welcome
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('welcome');
   const [openSettingsFromScreen, setOpenSettingsFromScreen] = useState<ScreenType | null>(null);
 
-  // Default reading position: Chapter 2, Verse 47 as highlighted in user's mockup
+  // User Profile Name (default "Dhanush" matching storyboard screen 3)
+  const [userName, setUserNameState] = useState<string>(() => {
+    return localStorage.getItem('gita_userName') || 'Dhanush';
+  });
+
+  const [isGoogleLinked, setIsGoogleLinkedState] = useState<boolean>(() => {
+    return localStorage.getItem('gita_google_linked') === 'true';
+  });
+
   const [selectedChapter, setSelectedChapter] = useState<number>(2);
   const [selectedVerse, setSelectedVerse] = useState<number>(47);
 
-  // Bookmarks: pre-populated with the exact 4 verses from Screen 6 of the mockup!
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
     const saved = localStorage.getItem('gita_bookmarks');
     return saved ? JSON.parse(saved) : ["2.47", "4.7", "12.13", "18.66"];
@@ -84,6 +99,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setTextSize = (size: TextSize) => {
     setTextSizeState(size);
     localStorage.setItem('gita_textSize', size);
+  };
+
+  const setUserName = (name: string) => {
+    setUserNameState(name);
+    localStorage.setItem('gita_userName', name);
+  };
+
+  const setIsGoogleLinked = (linked: boolean) => {
+    setIsGoogleLinkedState(linked);
+    localStorage.setItem('gita_google_linked', linked ? 'true' : 'false');
+  };
+
+  const setOnboardingCompleted = (completed: boolean) => {
+    setOnboardingCompletedState(completed);
+    localStorage.setItem('gita_onboarding_completed', completed ? 'true' : 'false');
   };
 
   const setTheme = (tMode: ThemeMode) => {
@@ -127,7 +157,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const t = UI_TRANSLATIONS[language] || UI_TRANSLATIONS.en;
 
-  // Initialize theme on mount
   useEffect(() => {
     setTheme(theme);
   }, []);
@@ -161,6 +190,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         t,
         openSettingsFromScreen,
         setOpenSettingsFromScreen,
+        userName,
+        setUserName,
+        isGoogleLinked,
+        setIsGoogleLinked,
+        onboardingCompleted,
+        setOnboardingCompleted,
       }}
     >
       {children}
