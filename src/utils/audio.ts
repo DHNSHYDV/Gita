@@ -1,6 +1,6 @@
 // Authentic Audio Engine for Gita Shlokas:
 // 1. Pristine Sanskrit Chanting (Authentic recorded Vedic Temple Audio for all 701 verses)
-// 2. Regional Accent Native Android Speech Engine (Native Telugu, Hindi, Tamil, Kannada, and Indian English enunciation)
+// 2. Regional Accent Native Android Speech Engine (Native Telugu, Hindi, Tamil, Kannada, and Indian English)
 
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { Capacitor } from '@capacitor/core';
@@ -15,10 +15,16 @@ class SacredAudioPlayer {
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private onStateChange: ((playing: boolean, mode: AudioPlayMode, loading?: boolean) => void) | null = null;
   private activeAbortController: AbortController | null = null;
+  private supportedNativeLangs: string[] | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
       this.initAudioElement();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
     }
   }
 
@@ -34,7 +40,6 @@ class SacredAudioPlayer {
 
     this.audioEl = new Audio();
     this.audioEl.preload = 'auto';
-    this.audioEl.crossOrigin = 'anonymous';
 
     this.audioEl.onplay = () => {
       this.isLoading = false;
@@ -59,7 +64,7 @@ class SacredAudioPlayer {
     };
 
     this.audioEl.onerror = () => {
-      // Audio element error handled in caller
+      // Handled in caller
     };
   }
 
@@ -113,42 +118,21 @@ class SacredAudioPlayer {
     this.currentMode = 'chant';
     this.notifyState();
 
-    const cdnUrl = `https://cdn.jsdelivr.net/gh/nikhilsi/gitavani@main/android/GitaVani/app/src/main/assets/audio/BG${chapterNumber}.${verseNumber}.mp3`;
+    const cdnUrls = [
+      `https://cdn.jsdelivr.net/gh/nikhilsi/gitavani@main/android/GitaVani/app/src/main/assets/audio/BG${chapterNumber}.${verseNumber}.mp3`,
+      `https://fastly.jsdelivr.net/gh/nikhilsi/gitavani@main/android/GitaVani/app/src/main/assets/audio/BG${chapterNumber}.${verseNumber}.mp3`,
+      `https://gcore.jsdelivr.net/gh/nikhilsi/gitavani@main/android/GitaVani/app/src/main/assets/audio/BG${chapterNumber}.${verseNumber}.mp3`,
+    ];
 
-    // Attempt 1: Direct HTML5 streaming from Cloudflare/jsDelivr edge
-    try {
-      if (!this.audioEl) {
-        this.initAudioElement();
-      }
-
-      if (this.audioEl) {
-        this.audioEl.src = cdnUrl;
-        await this.audioEl.play();
-        this.isLoading = false;
-        this.isPlaying = true;
-        this.currentMode = 'chant';
-        this.notifyState();
-        return;
-      }
-    } catch (e) {
-      console.warn('Direct audio stream attempt failed, trying blob stream...', e);
-    }
-
-    // Attempt 2: Fetch as Blob to completely bypass any WebView header/CORS restrictions
-    try {
-      this.activeAbortController = new AbortController();
-      const res = await fetch(cdnUrl, {
-        signal: this.activeAbortController.signal,
-        cache: 'force-cache',
-      });
-
-      if (res.ok) {
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        if (!this.audioEl) this.initAudioElement();
+    // Attempt 1: Direct HTML5 streaming from multi-CDN edges
+    for (const url of cdnUrls) {
+      try {
+        if (!this.audioEl) {
+          this.initAudioElement();
+        }
 
         if (this.audioEl) {
-          this.audioEl.src = blobUrl;
+          this.audioEl.src = url;
           await this.audioEl.play();
           this.isLoading = false;
           this.isPlaying = true;
@@ -156,12 +140,41 @@ class SacredAudioPlayer {
           this.notifyState();
           return;
         }
+      } catch (e) {
+        console.warn('Direct stream attempt failed for:', url, e);
       }
-    } catch (e) {
-      console.warn('Blob audio fetch failed:', e);
     }
 
-    // Attempt 3: Offline Sanskrit Recitation using Native TTS
+    // Attempt 2: Fetch as Blob to completely bypass any WebView/browser header restrictions
+    for (const url of cdnUrls) {
+      try {
+        this.activeAbortController = new AbortController();
+        const res = await fetch(url, {
+          signal: this.activeAbortController.signal,
+          cache: 'force-cache',
+        });
+
+        if (res.ok) {
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          if (!this.audioEl) this.initAudioElement();
+
+          if (this.audioEl) {
+            this.audioEl.src = blobUrl;
+            await this.audioEl.play();
+            this.isLoading = false;
+            this.isPlaying = true;
+            this.currentMode = 'chant';
+            this.notifyState();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Blob audio fetch failed for:', url, e);
+      }
+    }
+
+    // Attempt 3: Offline Sanskrit Recitation using Regional Speech engine
     if (fallbackSanskritText) {
       this.isLoading = false;
       await this.playRegionalSpeech(fallbackSanskritText, 'sa', 0.82);
@@ -169,6 +182,43 @@ class SacredAudioPlayer {
     }
 
     this.stop();
+  }
+
+  // Query and cache supported native Android TTS languages
+  private async getBestNativeLanguage(preferredLocale: string): Promise<string> {
+    try {
+      if (!this.supportedNativeLangs) {
+        const res = await TextToSpeech.getSupportedLanguages();
+        if (res && Array.isArray(res.languages)) {
+          this.supportedNativeLangs = res.languages;
+        }
+      }
+
+      if (this.supportedNativeLangs && this.supportedNativeLangs.length > 0) {
+        // Exact match (e.g. "te-IN")
+        const exact = this.supportedNativeLangs.find(l => l.toLowerCase() === preferredLocale.toLowerCase());
+        if (exact) return exact;
+
+        // Prefix match (e.g. "te")
+        const prefix = preferredLocale.slice(0, 2).toLowerCase();
+        const langMatch = this.supportedNativeLangs.find(l => l.toLowerCase().startsWith(prefix));
+        if (langMatch) return langMatch;
+
+        // Hindi fallback
+        const hiMatch = this.supportedNativeLangs.find(l => l.toLowerCase().startsWith('hi'));
+        if (hiMatch) return hiMatch;
+
+        // English fallback
+        const enMatch = this.supportedNativeLangs.find(l => l.toLowerCase().startsWith('en'));
+        if (enMatch) return enMatch;
+
+        // First available language
+        return this.supportedNativeLangs[0];
+      }
+    } catch {
+      // Ignore
+    }
+    return preferredLocale;
   }
 
   // 2. Play Regional Accent Speech for Translations & Meanings
@@ -191,7 +241,7 @@ class SacredAudioPlayer {
       ta: 'ta-IN', // Tamil (India)
       kn: 'kn-IN', // Kannada (India)
       en: 'en-IN', // Indian English
-      sa: 'hi-IN', // Sanskrit enunciation via high-quality Hindi/Sanskrit TTS
+      sa: 'hi-IN', // Sanskrit enunciation via Hindi
     };
 
     const targetLocale = localeMap[language] || 'hi-IN';
@@ -201,27 +251,17 @@ class SacredAudioPlayer {
     this.isLoading = false;
     this.notifyState();
 
-    // 1. If Native Android (Capacitor), use Native TextToSpeech Java API
+    // Strategy 1: Native Android (Capacitor) TextToSpeech Java API
     if (Capacitor.isNativePlatform()) {
-      try {
-        await TextToSpeech.stop();
-        await TextToSpeech.speak({
-          text: cleanText,
-          lang: targetLocale,
-          rate: speechRate,
-          pitch: 1.0,
-          volume: 1.0,
-          category: 'playback',
-        });
-        this.stop();
-        return;
-      } catch (nativeErr) {
-        console.warn('Native TTS error, trying fallback locale:', nativeErr);
+      const chosenLang = await this.getBestNativeLanguage(targetLocale);
+      
+      // Retry up to 3 times in case Android TTS engine is still initializing
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          // If specific locale failed on user's device, try fallback to Hindi/English
+          await TextToSpeech.stop();
           await TextToSpeech.speak({
             text: cleanText,
-            lang: 'hi-IN',
+            lang: chosenLang,
             rate: speechRate,
             pitch: 1.0,
             volume: 1.0,
@@ -229,13 +269,30 @@ class SacredAudioPlayer {
           });
           this.stop();
           return;
-        } catch (fallbackErr) {
-          console.error('All native TTS attempts failed:', fallbackErr);
+        } catch (nativeErr) {
+          console.warn(`Native TTS attempt ${attempt + 1} failed:`, nativeErr);
+          await new Promise(r => setTimeout(r, 350));
         }
+      }
+
+      // If chosenLang failed, try en-US/default as safe fallback
+      try {
+        await TextToSpeech.speak({
+          text: cleanText,
+          lang: 'en-US',
+          rate: speechRate,
+          pitch: 1.0,
+          volume: 1.0,
+          category: 'playback',
+        });
+        this.stop();
+        return;
+      } catch (fallbackErr) {
+        console.warn('Native TTS default fallback failed:', fallbackErr);
       }
     }
 
-    // 2. Fallback to Web Speech API (for Browser / Desktop / PWA)
+    // Strategy 2: Web Speech API (for Browser / Desktop / PWA)
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -244,22 +301,32 @@ class SacredAudioPlayer {
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.rate = speechRate;
         utterance.pitch = 1.0;
-        utterance.lang = targetLocale;
 
         const voices = window.speechSynthesis.getVoices();
-        let bestVoice = voices.find(
-          (v) => v.lang === targetLocale || v.lang.replace('_', '-').startsWith(targetLocale)
-        );
+        if (voices.length > 0) {
+          let bestVoice = voices.find(
+            (v) => v.lang === targetLocale || v.lang.replace('_', '-').startsWith(targetLocale)
+          );
 
-        if (!bestVoice) {
-          bestVoice = voices.find((v) => v.lang.startsWith(targetLocale.slice(0, 2)));
-        }
-        if (!bestVoice) {
-          bestVoice = voices.find((v) => v.lang.includes('IN'));
-        }
+          if (!bestVoice) {
+            bestVoice = voices.find((v) => v.lang.startsWith(targetLocale.slice(0, 2)));
+          }
+          if (!bestVoice) {
+            bestVoice = voices.find((v) => v.lang.includes('IN'));
+          }
+          if (!bestVoice) {
+            bestVoice = voices.find((v) => v.lang.startsWith('en'));
+          }
+          if (!bestVoice) {
+            bestVoice = voices[0];
+          }
 
-        if (bestVoice) {
-          utterance.voice = bestVoice;
+          if (bestVoice) {
+            utterance.voice = bestVoice;
+            utterance.lang = bestVoice.lang;
+          }
+        } else {
+          utterance.lang = 'en-US';
         }
 
         utterance.onstart = () => {
@@ -280,7 +347,7 @@ class SacredAudioPlayer {
         window.speechSynthesis.speak(utterance);
         return;
       } catch (webErr) {
-        console.error('Web Speech API error:', webErr);
+        console.warn('Web Speech API error:', webErr);
       }
     }
 

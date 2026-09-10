@@ -324,7 +324,7 @@ export const ShlokaScreen: React.FC = () => {
     setLastRead({ chapter: selectedChapter, verse: selectedVerse });
     recordReadingForStreak();
     audioPlayer.stop();
-  }, [selectedChapter, selectedVerse, setLastRead]);
+  }, [selectedChapter, selectedVerse]);
 
   // Handle audio state
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Language, TextSize, ThemeMode, ScreenType } from '../types';
 import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
 import { updateNativeStatusBar } from '../utils/native';
@@ -196,10 +196,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     updateNativeStatusBar(tMode);
   };
 
-  const setLastRead = (pos: { chapter: number; verse: number }) => {
-    setLastReadState(pos);
-    localStorage.setItem('gita_lastRead', JSON.stringify(pos));
-  };
+  const setLastRead = useCallback((pos: { chapter: number; verse: number }) => {
+    setLastReadState(prev => {
+      if (prev.chapter === pos.chapter && prev.verse === pos.verse) return prev;
+      localStorage.setItem('gita_lastRead', JSON.stringify(pos));
+      return pos;
+    });
+  }, []);
 
   const toggleBookmark = (verseId: string) => {
     setBookmarks(prev => {
