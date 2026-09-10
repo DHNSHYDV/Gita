@@ -34,3 +34,4 @@ android/app/.cxx/
 # Local properties
 android/local.properties
 *.idsig
+apk_archive/
