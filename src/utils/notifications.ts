@@ -55,11 +55,21 @@ export async function scheduleDailyMorningQuotes(
       return;
     }
 
-    // 2. Check and request notification permissions
+    // 2. Check notification permissions (prompt at most once)
     const permStatus = await LocalNotifications.checkPermissions();
-    if (permStatus.display !== 'granted') {
+    if (permStatus.display === 'granted') {
+      localStorage.setItem('gita_notif_perm_granted', 'true');
+    } else {
+      const alreadyPrompted = localStorage.getItem('gita_notif_perm_prompted');
+      if (alreadyPrompted) {
+        // Already asked once and not granted; do not prompt again repeatedly
+        return;
+      }
+      localStorage.setItem('gita_notif_perm_prompted', 'true');
       const requestStatus = await LocalNotifications.requestPermissions();
-      if (requestStatus.display !== 'granted') {
+      if (requestStatus.display === 'granted') {
+        localStorage.setItem('gita_notif_perm_granted', 'true');
+      } else {
         console.warn('⚠️ [Notifications] Notification permission not granted by user.');
         return;
       }

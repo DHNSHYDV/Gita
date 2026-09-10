@@ -1,4 +1,3 @@
-import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import packageJson from '../../package.json';
 
@@ -95,62 +94,9 @@ export async function checkForUpdate(): Promise<AppRelease | null> {
       otaBundleSizeMb,
     };
 
-    // Send native notification if on Android / Native
-    await notifyUpdateAvailable(appRelease);
-
     return appRelease;
   } catch {
     return null;
-  }
-}
-
-// Send local notification to Android Notification Panel
-export async function notifyUpdateAvailable(release: AppRelease): Promise<void> {
-  try {
-    // Check if user already saw this notification in this session
-    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(`gita_notified_${release.tag}`)) {
-      return;
-    }
-
-    if (Capacitor.isNativePlatform()) {
-      const perm = await LocalNotifications.checkPermissions();
-      if (perm.display !== 'granted') {
-        const req = await LocalNotifications.requestPermissions();
-        if (req.display !== 'granted') return;
-      }
-
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            id: 108,
-            title: `🕉️ Gita Update Available (${release.tag})`,
-            body: `Version ${release.tag} is ready to download. Tap to install directly from GitHub.`,
-            largeBody: release.body.slice(0, 200) + '...',
-            summaryText: 'App Update',
-            extra: {
-              downloadUrl: release.downloadUrl,
-            },
-            iconColor: '#C59341',
-            autoCancel: true,
-          },
-        ],
-      });
-
-      // Set listener for notification click
-      LocalNotifications.removeAllListeners();
-      LocalNotifications.addListener('localNotificationActionPerformed', (notificationAction) => {
-        const url = notificationAction.notification.extra?.downloadUrl || release.downloadUrl;
-        if (url) {
-          downloadAndInstallUpdate(url);
-        }
-      });
-
-      if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.setItem(`gita_notified_${release.tag}`, 'true');
-      }
-    }
-  } catch {
-    // Ignore notification errors
   }
 }
 
