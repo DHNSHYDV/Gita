@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { X, Download, Sparkles, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
 import {
   checkForUpdate,
   AppRelease,
@@ -9,11 +9,15 @@ import {
   downloadAndInstallUpdate,
   CURRENT_VERSION,
 } from '../utils/updater';
+import { downloadAndApplyLiveUpdate } from '../utils/ota';
+import { Capacitor } from '@capacitor/core';
 
 export const UpdateModal: React.FC = () => {
   const [release, setRelease] = useState<AppRelease | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isLiveUpdating, setIsLiveUpdating] = useState(false);
+  const [liveProgress, setLiveProgress] = useState(0);
 
   useEffect(() => {
     // Check for updates within the 1st 1 second of app open
@@ -33,6 +37,22 @@ export const UpdateModal: React.FC = () => {
       dismissUpdateForSession(release.tag);
     }
     setIsOpen(false);
+  };
+
+  const handleLiveUpdate = async () => {
+    if (!release || !release.otaBundleUrl) return;
+    setIsLiveUpdating(true);
+    setLiveProgress(10);
+
+    try {
+      await downloadAndApplyLiveUpdate(release.version, release.otaBundleUrl, (pct) => {
+        setLiveProgress(pct);
+      });
+    } catch (err) {
+      console.error('OTA Live update failed, falling back to APK:', err);
+      setIsLiveUpdating(false);
+      handleDownload();
+    }
   };
 
   const handleDownload = () => {
@@ -94,7 +114,7 @@ export const UpdateModal: React.FC = () => {
               Gita {release.tag}
             </h2>
             <p className="text-xs text-[#7A6E5D] dark:text-[#A89C8B] mt-0.5">
-              Current version: v{CURRENT_VERSION} • APK Size: ~{release.apkSizeMb} MB
+              Current version: v{CURRENT_VERSION} • {release.otaBundleUrl ? `Live OTA: ~${release.otaBundleSizeMb || 1.8} MB` : `APK Size: ~${release.apkSizeMb} MB`}
             </p>
           </div>
 
@@ -111,26 +131,68 @@ export const UpdateModal: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="mt-5 space-y-2">
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#C59341] via-[#D4A359] to-[#C59341] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-md shadow-[#C59341]/25 hover:opacity-95 active:scale-[0.98] transition-all"
-            >
-              {isDownloading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Opening Installer...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" strokeWidth={2} />
-                  <span>Download & Install Update</span>
-                </>
-              )}
-            </button>
+            {release.otaBundleUrl && Capacitor.isNativePlatform() ? (
+              <>
+                {isLiveUpdating ? (
+                  <div className="p-3 rounded-2xl bg-[#FAF0E1] dark:bg-[#282017] border border-[#E8D6BD] dark:border-[#3D3021] space-y-2">
+                    <div className="w-full bg-[#E2D4C0] dark:bg-[#382F24] rounded-full h-2.5 overflow-hidden">
+                      <motion.div
+                        className="bg-gradient-to-r from-[#C59341] to-[#E8C581] h-full rounded-full"
+                        initial={{ width: '10%' }}
+                        animate={{ width: `${liveProgress}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] font-bold text-[#8C6422] dark:text-[#E8C581]">
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                        Applying Live Update...
+                      </span>
+                      <span>{liveProgress}%</span>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleLiveUpdate}
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#C59341] via-[#D4A359] to-[#C59341] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-[#C59341]/25 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    <Zap className="w-4 h-4 fill-current" />
+                    <span>Instant Live Update (~{release.otaBundleSizeMb || 1.8} MB)</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={handleDownload}
+                  disabled={isDownloading || isLiveUpdating}
+                  className="w-full py-2.5 px-3 rounded-xl border border-[#DDD0BC] dark:border-[#332A1E] text-xs font-medium text-[#7A6E5D] dark:text-[#B0A595] hover:bg-[#EFE8DC] dark:hover:bg-[#251E17] transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Full APK (~{release.apkSizeMb} MB)</span>
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#C59341] via-[#D4A359] to-[#C59341] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-md shadow-[#C59341]/25 hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                {isDownloading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Opening Installer...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" strokeWidth={2} />
+                    <span>Download & Install Update</span>
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               onClick={handleDismiss}
+              disabled={isLiveUpdating}
               className="w-full py-2 text-center text-xs text-[#8A7E6C] dark:text-[#8E8373] hover:text-[#2A241E] dark:hover:text-[#FAF7F2] transition-colors"
             >
               Remind me next time

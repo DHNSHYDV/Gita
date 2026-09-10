@@ -10,6 +10,8 @@ export interface AppRelease {
   publishedAt: string;
   downloadUrl: string;
   apkSizeMb: number;
+  otaBundleUrl?: string;
+  otaBundleSizeMb?: number;
 }
 
 export const CURRENT_VERSION = packageJson.version || '1.4.3';
@@ -51,9 +53,11 @@ export async function checkForUpdate(): Promise<AppRelease | null> {
       return null;
     }
 
-    // Find the release APK asset
+    // Find the release APK asset & OTA web bundle (dist.zip)
     let downloadUrl = `https://github.com/DHNSHYDV/Gita/releases/download/${latestTag}/gita-${latestTag}-release.apk`;
-    let apkSizeMb = 7.2;
+    let apkSizeMb = 7.3;
+    let otaBundleUrl: string | undefined;
+    let otaBundleSizeMb: number | undefined;
 
     if (Array.isArray(release.assets)) {
       const apkAsset = release.assets.find((a: { name?: string; browser_download_url?: string; size?: number }) => 
@@ -67,6 +71,16 @@ export async function checkForUpdate(): Promise<AppRelease | null> {
           apkSizeMb = Math.round((apkAsset.size / (1024 * 1024)) * 10) / 10;
         }
       }
+
+      const zipAsset = release.assets.find((a: { name?: string; browser_download_url?: string; size?: number }) =>
+        a.name && (a.name === 'dist.zip' || a.name.endsWith('.zip'))
+      );
+      if (zipAsset) {
+        otaBundleUrl = zipAsset.browser_download_url;
+        if (zipAsset.size) {
+          otaBundleSizeMb = Math.round((zipAsset.size / (1024 * 1024)) * 10) / 10;
+        }
+      }
     }
 
     const appRelease: AppRelease = {
@@ -77,6 +91,8 @@ export async function checkForUpdate(): Promise<AppRelease | null> {
       publishedAt: release.published_at || new Date().toISOString(),
       downloadUrl,
       apkSizeMb,
+      otaBundleUrl,
+      otaBundleSizeMb,
     };
 
     // Send native notification if on Android / Native

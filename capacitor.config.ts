@@ -15,6 +15,10 @@ const config: CapacitorConfig = {
     }
   },
   plugins: {
+    CapacitorUpdater: {
+      autoUpdate: false,
+      resetWhenUpdate: false
+    },
     StatusBar: {
       overlaysWebView: false,
       style: 'LIGHT',

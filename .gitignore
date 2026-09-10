@@ -36,3 +36,4 @@ android/local.properties
 *.idsig
 apk_archive/
 *.apk
+*.zip

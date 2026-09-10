@@ -1,11 +1,13 @@
 {
   "name": "gita-app",
   "private": true,
-  "version": "1.4.8",
+  "version": "1.4.9",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
+    "build:ota": "npm run build && python3 scripts/build-ota.py",
+    "postinstall": "node scripts/patch-capgo.js",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -14,6 +16,7 @@
     "@capacitor/browser": "^7.0.5",
     "@capacitor/local-notifications": "^7.0.7",
     "@capacitor/status-bar": "^7.0.6",
+    "@capgo/capacitor-updater": "^7.51.15",
     "@supabase/supabase-js": "^2.109.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
