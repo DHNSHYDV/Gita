@@ -3,6 +3,7 @@ import { Language, TextSize, ThemeMode, ScreenType } from '../types';
 import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
 import { updateNativeStatusBar } from '../utils/native';
 import { supabase, fetchUserProfile, syncDevoteeProgress } from '../utils/supabase';
+import { getStoredStreak } from '../data/db';
 
 interface AppContextType {
   language: Language;
@@ -39,6 +40,11 @@ interface AppContextType {
   onboardingCompleted: boolean;
   setOnboardingCompleted: (completed: boolean) => void;
   screenDirection: number;
+  listenedVerses: string[];
+  awardListenPoint: (chapter: number, verse: number) => boolean;
+  sadhanaPoints: number;
+  toastMessage: string | null;
+  showToast: (msg: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -262,6 +268,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentScreen('shloka');
   };
 
+  // Real-time unique listened verses (1 point per verse forever, no duplicates)
+  const [listenedVerses, setListenedVerses] = useState<string[]>(() => {
+    const saved = localStorage.getItem('gita_listened_verses');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 2200);
+  }, []);
+
+  const streakInfo = getStoredStreak();
+  const sadhanaPoints = listenedVerses.length + (streakInfo.currentStreak * 5);
+
+  const awardListenPoint = useCallback((chapter: number, verse: number): boolean => {
+    const verseKey = `${chapter}.${verse}`;
+    const saved = localStorage.getItem('gita_listened_verses');
+    const currentList: string[] = saved ? JSON.parse(saved) : [];
+
+    if (!currentList.includes(verseKey)) {
+      const updated = [...currentList, verseKey];
+      setListenedVerses(updated);
+      localStorage.setItem('gita_listened_verses', JSON.stringify(updated));
+
+      const streak = getStoredStreak();
+      const newPoints = updated.length + (streak.currentStreak * 5);
+
+      showToast(`+1 Sadhana Point! ✨ (${newPoints} pts)`);
+
+      syncDevoteeProgress({
+        points: newPoints,
+        listenedVerses: updated,
+        streak: streak.currentStreak,
+        lastRead,
+        bookmarks,
+      });
+      return true;
+    }
+    return false;
+  }, [lastRead, bookmarks, showToast]);
+
   const t = UI_TRANSLATIONS[language] || UI_TRANSLATIONS.en;
 
   useEffect(() => {
@@ -286,6 +337,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (Array.isArray(cloudBookmarks) && cloudBookmarks.length > 0) {
               setBookmarks(cloudBookmarks as string[]);
               localStorage.setItem('gita_bookmarks', JSON.stringify(cloudBookmarks));
+            }
+            const cloudListened = (profile.last_read as Record<string, unknown>)?.listened_verses;
+            if (Array.isArray(cloudListened) && cloudListened.length > 0) {
+              setListenedVerses(cloudListened as string[]);
+              localStorage.setItem('gita_listened_verses', JSON.stringify(cloudListened));
             }
           }
         }
@@ -349,6 +405,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         onboardingCompleted,
         setOnboardingCompleted,
         screenDirection,
+        listenedVerses,
+        awardListenPoint,
+        sadhanaPoints,
+        toastMessage,
+        showToast,
       }}
     >
       {children}

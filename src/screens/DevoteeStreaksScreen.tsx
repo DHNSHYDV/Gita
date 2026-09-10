@@ -6,7 +6,7 @@ import { getStoredStreak } from '../data/db';
 import { fetchLeaderboard, fetchRegisteredDevoteeCount, type RealLeaderboardDevotee, getCurrentUser } from '../utils/supabase';
 
 export const DevoteeStreaksScreen: React.FC = () => {
-  const { userName, goBack, t } = useApp();
+  const { userName, goBack, sadhanaPoints, listenedVerses, t } = useApp();
   const [activeTab, setActiveTab] = useState<'top' | 'my' | 'community'>('top');
   const [period, setPeriod] = useState<'today' | 'week' | 'all'>('today');
   const [cloudLeaderboard, setCloudLeaderboard] = useState<RealLeaderboardDevotee[]>([]);
@@ -40,29 +40,41 @@ export const DevoteeStreaksScreen: React.FC = () => {
           rank: 1,
           name: `${userName || 'You'}`,
           streakDays: streakInfo.currentStreak,
+          points: sadhanaPoints,
           isCurrentUser: true,
         },
       ];
     }
 
     const hasMe = cloudLeaderboard.some(d => d.id === currentUserId || (userName && d.name === userName));
-    const formatted = cloudLeaderboard.map((d, idx) => ({
-      ...d,
-      rank: idx + 1,
-      isCurrentUser: d.id === currentUserId || (!!userName && d.name === userName),
-    }));
+    const formatted = cloudLeaderboard.map((d) => {
+      const isMe = d.id === currentUserId || (!!userName && d.name === userName);
+      return {
+        ...d,
+        points: isMe ? Math.max(d.points || 0, sadhanaPoints) : (d.points || 0),
+        streakDays: isMe ? Math.max(d.streakDays || 0, streakInfo.currentStreak) : d.streakDays,
+        isCurrentUser: isMe,
+      };
+    });
 
     if (!hasMe) {
       formatted.push({
         id: 'me',
-        rank: formatted.length + 1,
+        rank: 0,
         name: `${userName || 'You'}`,
         streakDays: streakInfo.currentStreak,
+        points: sadhanaPoints,
         isCurrentUser: true,
       });
     }
 
-    return formatted;
+    // Rank devotees: Highest Sadhana Points first, then Highest Streak days
+    formatted.sort((a, b) => b.points - a.points || b.streakDays - a.streakDays);
+
+    return formatted.map((item, idx) => ({
+      ...item,
+      rank: idx + 1,
+    }));
   })();
 
   // Animated rolling counter for streak days (from 0 to actual real streak)
@@ -299,10 +311,16 @@ export const DevoteeStreaksScreen: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Flame Streak Badge */}
-                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FAF2E6] dark:bg-[#2B2319] border border-[#EBD7BE] dark:border-[#3D3122] text-[#D97706] dark:text-[#FBBF24] text-xs font-bold flex-shrink-0 shadow-2xs">
-                      <Flame className="w-3.5 h-3.5 fill-current" />
-                      <span>{item.streakDays}d</span>
+                    {/* Flame Streak Badge & Points Badge */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FAF2E6] dark:bg-[#2B2319] border border-[#EBD7BE] dark:border-[#3D3122] text-[#D97706] dark:text-[#FBBF24] text-[11px] font-bold shadow-2xs">
+                        <Flame className="w-3 h-3 fill-current" />
+                        <span>{item.streakDays}d</span>
+                      </div>
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-[#322713] border border-[#FDE68A]/60 dark:border-[#523F1A] text-[#B45309] dark:text-[#FCD34D] text-[11px] font-bold shadow-2xs">
+                        <Sparkles className="w-3 h-3 fill-current" />
+                        <span>{item.points || 0} pts</span>
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -363,22 +381,45 @@ export const DevoteeStreaksScreen: React.FC = () => {
                 Consecutive Devotional Reading Streak
               </p>
 
-              {/* Streak Stats Grid */}
-              <div className="grid grid-cols-2 gap-3 mt-6 pt-5 border-t border-[#DECDBD] dark:border-[#35291C]">
-                <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#251E17]/80 border border-[#E8DED1] dark:border-[#362D21]">
-                  <p className="text-[11px] text-[#8A7C68]">Longest Sadhana</p>
-                  <p className="font-serif text-lg font-bold text-[#2A241E] dark:text-[#FAF7F2] mt-0.5">
+              {/* Sadhana Points Pill */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-3 rounded-full bg-[#FAF2E6] dark:bg-[#2B2319] border border-[#EBD7BE] dark:border-[#3D3122] text-[#B45309] dark:text-[#FCD34D] text-xs font-bold shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 fill-current" />
+                <span>{sadhanaPoints} Sadhana Points</span>
+              </div>
+
+              {/* Streak & Sadhana Stats Grid */}
+              <div className="grid grid-cols-2 gap-2.5 mt-5 pt-5 border-t border-[#DECDBD] dark:border-[#35291C]">
+                <div className="p-3 rounded-2xl bg-white/80 dark:bg-[#251E17]/80 border border-[#E8DED1] dark:border-[#362D21]">
+                  <p className="text-[10px] text-[#8A7C68] font-medium">Sadhana Points</p>
+                  <p className="font-serif text-base font-bold text-[#C59341] dark:text-[#E8C581] mt-0.5">
+                    {sadhanaPoints} pts
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-white/80 dark:bg-[#251E17]/80 border border-[#E8DED1] dark:border-[#362D21]">
+                  <p className="text-[10px] text-[#8A7C68] font-medium">Verses Listened</p>
+                  <p className="font-serif text-base font-bold text-[#2A241E] dark:text-[#FAF7F2] mt-0.5">
+                    {listenedVerses.length} / 700
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-white/80 dark:bg-[#251E17]/80 border border-[#E8DED1] dark:border-[#362D21]">
+                  <p className="text-[10px] text-[#8A7C68] font-medium">Longest Sadhana</p>
+                  <p className="font-serif text-base font-bold text-[#2A241E] dark:text-[#FAF7F2] mt-0.5">
                     {streakInfo.longestStreak} days
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-[#251E17]/80 border border-[#E8DED1] dark:border-[#362D21]">
-                  <p className="text-[11px] text-[#8A7C68]">Verses Contemplated</p>
-                  <p className="font-serif text-lg font-bold text-[#2A241E] dark:text-[#FAF7F2] mt-0.5">
+                <div className="p-3 rounded-2xl bg-white/80 dark:bg-[#251E17]/80 border border-[#E8DED1] dark:border-[#362D21]">
+                  <p className="text-[10px] text-[#8A7C68] font-medium">Verses Read</p>
+                  <p className="font-serif text-base font-bold text-[#2A241E] dark:text-[#FAF7F2] mt-0.5">
                     {streakInfo.totalVersesRead}
                   </p>
                 </div>
               </div>
+              <p className="text-[10px] text-[#8A7E6C] dark:text-[#9F9382] mt-3 italic">
+                1 pt per unique verse listened/chanted + 5 pts per streak day
+              </p>
             </div>
 
             {/* Weekly Check-in Days */}

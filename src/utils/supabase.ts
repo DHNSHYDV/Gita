@@ -171,6 +171,7 @@ export interface RealLeaderboardDevotee {
   rank: number;
   name: string;
   streakDays: number;
+  points: number;
   avatarUrl?: string | null;
   isCurrentUser?: boolean;
 }
@@ -179,7 +180,7 @@ export async function fetchLeaderboard(): Promise<RealLeaderboardDevotee[]> {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url, streak, updated_at')
+      .select('id, username, avatar_url, streak, last_read, updated_at')
       .order('streak', { ascending: false })
       .limit(50);
 
@@ -188,12 +189,28 @@ export async function fetchLeaderboard(): Promise<RealLeaderboardDevotee[]> {
       return [];
     }
 
-    return data.map((item, index) => ({
-      id: item.id,
+    const devotees = data.map((item) => {
+      const lr = (item.last_read || {}) as Record<string, unknown>;
+      const streak = typeof item.streak === 'number' ? item.streak : 1;
+      const listened = Array.isArray(lr.listened_verses) ? lr.listened_verses.length : 0;
+      const storedPoints = typeof lr.points === 'number' ? lr.points : (listened + streak * 5);
+
+      return {
+        id: item.id,
+        rank: 0,
+        name: item.username || 'Devotee',
+        streakDays: streak,
+        points: storedPoints,
+        avatarUrl: item.avatar_url,
+      };
+    });
+
+    // Rank primarily by Points DESC, secondarily by Streak DESC
+    devotees.sort((a, b) => b.points - a.points || b.streakDays - a.streakDays);
+
+    return devotees.map((d, index) => ({
+      ...d,
       rank: index + 1,
-      name: item.username || 'Devotee',
-      streakDays: typeof item.streak === 'number' ? item.streak : 1,
-      avatarUrl: item.avatar_url,
     }));
   } catch (err) {
     console.warn('Error fetching leaderboard:', err);
@@ -217,31 +234,43 @@ export async function fetchRegisteredDevoteeCount(): Promise<number> {
   }
 }
 
-// 8. Sync Devotee Progress (Streak, Last Read & Bookmarks)
+// 8. Sync Devotee Progress (Streak, Last Read, Bookmarks, Points & Listened Verses)
 export async function syncDevoteeProgress(params: {
   streak?: number;
   lastRead?: { chapter: number; verse: number };
   bookmarks?: string[];
+  points?: number;
+  listenedVerses?: string[];
 }): Promise<void> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Fetch existing profile last_read so we merge instead of overwriting
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('last_read')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const existingLastRead = (currentProfile?.last_read || {}) as Record<string, unknown>;
+
+    const updatedLastRead: Record<string, unknown> = {
+      ...existingLastRead,
+      ...(params.lastRead ? { chapter: params.lastRead.chapter, verse: params.lastRead.verse } : {}),
+      ...(params.bookmarks ? { bookmarks: params.bookmarks } : {}),
+      ...(params.listenedVerses ? { listened_verses: params.listenedVerses } : {}),
+      ...(typeof params.points === 'number' ? { points: params.points } : {}),
+    };
+
     const payload: Record<string, unknown> = {
       id: user.id,
       updated_at: new Date().toISOString(),
+      last_read: updatedLastRead,
     };
 
     if (typeof params.streak === 'number') {
       payload.streak = params.streak;
-    }
-
-    if (params.lastRead) {
-      payload.last_read = {
-        chapter: params.lastRead.chapter,
-        verse: params.lastRead.verse,
-        ...(params.bookmarks ? { bookmarks: params.bookmarks } : {}),
-      };
     }
 
     await supabase.from('profiles').upsert(payload);

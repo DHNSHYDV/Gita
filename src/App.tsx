@@ -54,15 +54,9 @@ export const AppContent: React.FC = () => {
     setIsGoogleLinked,
     setOnboardingCompleted,
     setCurrentScreen,
+    toastMessage,
+    showToast,
   } = useApp();
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2000);
-  };
 
   // Register Android Hardware Back Button & Edge Swipe Gesture Listener
   useEffect(() => {

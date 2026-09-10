@@ -13,6 +13,7 @@ export const HomeScreen: React.FC = () => {
     setCurrentScreen,
     navigateToShloka,
     lastRead,
+    sadhanaPoints,
     t,
     setDailyVerseModalOpen,
   } = useApp();
@@ -66,8 +67,16 @@ export const HomeScreen: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setCurrentScreen('streaks')}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FAF2E6] dark:bg-[#251E16] border border-[#EBD7BE] dark:border-[#3D3122] text-[#B45309] dark:text-[#FCD34D] text-xs font-bold shadow-2xs hover:scale-105 transition-transform"
+            title="Sadhana Points"
+          >
+            <Sparkles className="w-3.5 h-3.5 fill-current" />
+            <span>{sadhanaPoints}</span>
+          </button>
+          <button
             onClick={() => setIsSearchOpen(true)}
-            className="p-2.5 rounded-full text-[#6E6353] dark:text-[#B0A595] hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
+            className="p-2 rounded-full text-[#6E6353] dark:text-[#B0A595] hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
             title="Search"
           >
             <Search className="w-5 h-5" strokeWidth={1.75} />
@@ -185,6 +194,9 @@ export const HomeScreen: React.FC = () => {
               </div>
               <span className="text-[11px] font-medium text-[#4A3E2E] dark:text-[#D5C6B1] text-center truncate max-w-full">
                 {t.sadhanaCircle}
+              </span>
+              <span className="text-[9px] font-bold text-[#C59341] dark:text-[#E8C581]">
+                {sadhanaPoints} pts
               </span>
             </motion.button>
 

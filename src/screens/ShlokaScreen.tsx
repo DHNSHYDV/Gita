@@ -304,6 +304,7 @@ export const ShlokaScreen: React.FC = () => {
     isBookmarked,
     toggleBookmark,
     setLastRead,
+    awardListenPoint,
     t,
   } = useApp();
 
@@ -385,12 +386,14 @@ export const ShlokaScreen: React.FC = () => {
 
   // Toggle authentic Sanskrit temple chanting with fallback
   const handlePlayAudio = () => {
+    awardListenPoint(selectedChapter, selectedVerse);
     const verseData = getVerse(selectedChapter, selectedVerse);
     audioPlayer.toggleChant(selectedChapter, selectedVerse, verseData.sanskrit);
   };
 
   // Toggle regional voice recitation of translation
   const handlePlaySpeech = (text: string) => {
+    awardListenPoint(selectedChapter, selectedVerse);
     audioPlayer.toggleRegionalSpeech(text, language);
   };
 

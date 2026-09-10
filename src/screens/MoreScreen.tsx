@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { signOutUser } from '../utils/supabase';
+import { getStoredStreak } from '../data/db';
 
 export const MoreScreen: React.FC = () => {
   const {
@@ -37,8 +38,12 @@ export const MoreScreen: React.FC = () => {
     isGoogleLinked,
     setIsGoogleLinked,
     goBack,
+    sadhanaPoints,
+    listenedVerses,
     t,
   } = useApp();
+
+  const streakInfo = getStoredStreak();
 
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -117,6 +122,19 @@ export const MoreScreen: React.FC = () => {
             <p className="text-xs text-[#8A7E6C] dark:text-[#9F9382] mt-0.5">
               {t.closerToBetterYou}
             </p>
+            <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FAF2E6] dark:bg-[#2B2319] text-[#D97706] dark:text-[#FBBF24] text-[10px] font-bold border border-[#EBD7BE] dark:border-[#3D3122]">
+                <Flame className="w-3 h-3 fill-current" />
+                {streakInfo.currentStreak}d streak
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#FEF3C7] dark:bg-[#322713] text-[#B45309] dark:text-[#FCD34D] text-[10px] font-bold border border-[#FDE68A]/60 dark:border-[#523F1A]">
+                <Sparkles className="w-3 h-3 fill-current" />
+                {sadhanaPoints} pts
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F0EBE1] dark:bg-[#251E17] text-[#7A6D5B] dark:text-[#C5B7A5] text-[10px] font-medium border border-[#DDD4C5] dark:border-[#382F24]">
+                🎧 {listenedVerses.length} verses
+              </span>
+            </div>
           </div>
         </div>
 
@@ -344,7 +362,7 @@ export const MoreScreen: React.FC = () => {
 
         {/* Footer Version Info */}
         <div className="text-center pt-2 pb-4 text-xs text-[#9E9281] dark:text-[#6F6557]">
-          <p className="font-serif">Gita v1.4.7 (Production Release)</p>
+          <p className="font-serif">Gita v1.4.8 (Production Release)</p>
           <p className="mt-0.5">Designed with devotion for Google Play Store</p>
         </div>
       </main>
