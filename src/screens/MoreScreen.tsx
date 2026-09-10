@@ -303,7 +303,7 @@ export const MoreScreen: React.FC = () => {
 
         {/* Footer Version Info */}
         <div className="text-center pt-2 pb-4 text-xs text-[#9E9281] dark:text-[#6F6557]">
-          <p>Gita v1.2.0 (Build 3)</p>
+          <p>Gita v1.2.1 (Build 4)</p>
           <p className="mt-0.5">Designed for Google Play Store</p>
         </div>
       </main>

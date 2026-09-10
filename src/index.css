@@ -31,72 +31,105 @@
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* 3D Realistic Book Page-Turn Keyframes */
-.perspective-book {
-  perspective: 1400px;
+/* Studio-Grade Realistic Book Page-Turn Keyframes */
+.book-stage {
+  perspective: 1600px;
   perspective-origin: center center;
+  position: relative;
 }
 
-@keyframes pageTurnNext {
+@keyframes bookTurnOutNext {
   0% {
     transform: rotateY(0deg) translateZ(0);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     opacity: 1;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.06));
   }
-  45% {
-    transform: rotateY(-35deg) skewY(-2deg) scale(0.97);
-    box-shadow: -15px 15px 30px rgba(0, 0, 0, 0.22);
-    opacity: 0.75;
-  }
-  50% {
-    opacity: 0.3;
-  }
-  55% {
-    transform: rotateY(35deg) skewY(2deg) scale(0.97);
-    box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.22);
-    opacity: 0.75;
+  35% {
+    opacity: 0.95;
+    filter: drop-shadow(-10px 6px 18px rgba(0, 0, 0, 0.18));
   }
   100% {
-    transform: rotateY(0deg) translateZ(0);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    opacity: 1;
+    transform: rotateY(-65deg) scale(0.96) translateX(-4%);
+    opacity: 0;
+    filter: drop-shadow(-24px 12px 30px rgba(0, 0, 0, 0.3));
   }
 }
 
-@keyframes pageTurnPrev {
+@keyframes bookTurnInNext {
+  0% {
+    transform: rotateY(25deg) scale(0.96) translateX(4%);
+    opacity: 0.3;
+    filter: drop-shadow(12px 6px 16px rgba(0, 0, 0, 0.12));
+  }
+  40% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: rotateY(0deg) scale(1) translateX(0);
+    opacity: 1;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.06));
+  }
+}
+
+@keyframes bookTurnOutPrev {
   0% {
     transform: rotateY(0deg) translateZ(0);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     opacity: 1;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.06));
   }
-  45% {
-    transform: rotateY(35deg) skewY(2deg) scale(0.97);
-    box-shadow: 15px 15px 30px rgba(0, 0, 0, 0.22);
-    opacity: 0.75;
-  }
-  50% {
-    opacity: 0.3;
-  }
-  55% {
-    transform: rotateY(-35deg) skewY(-2deg) scale(0.97);
-    box-shadow: -15px 15px 30px rgba(0, 0, 0, 0.22);
-    opacity: 0.75;
+  35% {
+    opacity: 0.95;
+    filter: drop-shadow(10px 6px 18px rgba(0, 0, 0, 0.18));
   }
   100% {
-    transform: rotateY(0deg) translateZ(0);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    opacity: 1;
+    transform: rotateY(65deg) scale(0.96) translateX(4%);
+    opacity: 0;
+    filter: drop-shadow(24px 12px 30px rgba(0, 0, 0, 0.3));
   }
 }
 
-.animate-page-turn-next {
-  animation: pageTurnNext 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  transform-style: preserve-3d;
-  transform-origin: left center;
+@keyframes bookTurnInPrev {
+  0% {
+    transform: rotateY(-25deg) scale(0.96) translateX(-4%);
+    opacity: 0.3;
+    filter: drop-shadow(-12px 6px 16px rgba(0, 0, 0, 0.12));
+  }
+  40% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: rotateY(0deg) scale(1) translateX(0);
+    opacity: 1;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.06));
+  }
 }
 
-.animate-page-turn-prev {
-  animation: pageTurnPrev 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+.book-turn-out-next {
+  animation: bookTurnOutNext 0.34s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  transform-origin: 0% 50%;
   transform-style: preserve-3d;
-  transform-origin: right center;
+  will-change: transform, opacity, filter;
+  pointer-events: none;
+}
+
+.book-turn-in-next {
+  animation: bookTurnInNext 0.34s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  transform-origin: 100% 50%;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+}
+
+.book-turn-out-prev {
+  animation: bookTurnOutPrev 0.34s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  transform-origin: 100% 50%;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+  pointer-events: none;
+}
+
+.book-turn-in-prev {
+  animation: bookTurnInPrev 0.34s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  transform-origin: 0% 50%;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
 }
