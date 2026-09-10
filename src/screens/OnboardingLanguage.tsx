@@ -28,7 +28,7 @@ export const OnboardingLanguage: React.FC = () => {
             <ChevronLeft className="w-6 h-6 stroke-[1.75] text-[#2A241E] dark:text-[#FAF7F2]" />
           </motion.button>
           <button
-            onClick={() => setCurrentScreen('onboarding-username')}
+            onClick={() => setCurrentScreen('onboarding-auth')}
             className="text-xs font-semibold text-[#8C6D3F] dark:text-[#E8C581] hover:underline px-2 py-1"
           >
             Skip
@@ -95,7 +95,7 @@ export const OnboardingLanguage: React.FC = () => {
         <motion.button
           whileTap={{ scale: 0.96 }}
           whileHover={{ scale: 1.02 }}
-          onClick={() => setCurrentScreen('onboarding-username')}
+          onClick={() => setCurrentScreen('onboarding-auth')}
           className="w-full max-w-xs py-3.5 px-6 rounded-full bg-[#362719] hover:bg-[#271C11] text-[#FAF4EA] font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-colors"
         >
           <span>Continue</span>

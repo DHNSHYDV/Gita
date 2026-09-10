@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Language, TextSize, ThemeMode, ScreenType } from '../types';
 import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
 import { updateNativeStatusBar } from '../utils/native';
+import { supabase, fetchUserProfile } from '../utils/supabase';
 
 interface AppContextType {
   language: Language;
@@ -232,6 +233,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     setTheme(theme);
+
+    // Synchronize Supabase user and profile on startup
+    const syncUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setIsGoogleLinked(true);
+          const profile = await fetchUserProfile(session.user.id);
+          if (profile?.username) {
+            setUserName(profile.username);
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase initial session check error:', err);
+      }
+    };
+    syncUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+        setIsGoogleLinked(true);
+        const profile = await fetchUserProfile(session.user.id);
+        if (profile?.username) {
+          setUserName(profile.username);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setIsGoogleLinked(false);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   return (

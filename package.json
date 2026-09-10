@@ -1,7 +1,7 @@
 {
   "name": "gita-app",
   "private": true,
-  "version": "1.4.5",
+  "version": "1.4.6",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -11,8 +11,10 @@
   "dependencies": {
     "@capacitor-community/text-to-speech": "^6.1.0",
     "@capacitor/app": "^7.1.2",
+    "@capacitor/browser": "^7.0.5",
     "@capacitor/local-notifications": "^7.0.7",
     "@capacitor/status-bar": "^7.0.6",
+    "@supabase/supabase-js": "^2.109.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "framer-motion": "^13.2.0",

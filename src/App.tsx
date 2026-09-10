@@ -17,6 +17,8 @@ import { MoreScreen } from './screens/MoreScreen';
 import { DailyVerseModal } from './screens/DailyVerseModal';
 import { UpdateModal } from './components/UpdateModal';
 import { registerHardwareBackListener } from './utils/native';
+import { App as CapApp } from '@capacitor/app';
+import { handleAuthCallback, fetchUserProfile } from './utils/supabase';
 
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
@@ -44,7 +46,15 @@ const screenVariants: Variants = {
 };
 
 export const AppContent: React.FC = () => {
-  const { currentScreen, goBack, screenDirection } = useApp();
+  const {
+    currentScreen,
+    goBack,
+    screenDirection,
+    setUserName,
+    setIsGoogleLinked,
+    setOnboardingCompleted,
+    setCurrentScreen,
+  } = useApp();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -61,6 +71,41 @@ export const AppContent: React.FC = () => {
       unregister();
     };
   }, [goBack]);
+
+  // Deep Linking Handler for Mobile OAuth (com.gita.wisdom://login-callback)
+  useEffect(() => {
+    const handleAppUrl = async ({ url }: { url: string }) => {
+      if (url && (url.includes('login-callback') || url.includes('access_token') || url.includes('code='))) {
+        try {
+          const { session } = await handleAuthCallback(url);
+          if (session?.user) {
+            setIsGoogleLinked(true);
+            const profile = await fetchUserProfile(session.user.id);
+            if (profile?.username) {
+              // Returning user with existing username
+              setUserName(profile.username);
+              setOnboardingCompleted(true);
+              setCurrentScreen('onboarding-success');
+            } else {
+              // First time user: route to enter username
+              const suggestedName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || '';
+              if (suggestedName) {
+                setUserName(suggestedName);
+              }
+              setCurrentScreen('onboarding-username');
+            }
+          }
+        } catch (err) {
+          console.error('Deep link auth processing error:', err);
+        }
+      }
+    };
+
+    const listenerPromise = CapApp.addListener('appUrlOpen', handleAppUrl);
+    return () => {
+      listenerPromise.then(l => l.remove()).catch(() => {});
+    };
+  }, [setIsGoogleLinked, setUserName, setOnboardingCompleted, setCurrentScreen]);
 
   const renderScreen = () => {
     switch (currentScreen) {

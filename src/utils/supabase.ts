@@ -1,0 +1,166 @@
+import { createClient, type User, type Session } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+
+export const SUPABASE_URL = 'https://wjhdjihaddpqydmfmzxa.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_PCoa00Qsg_lA-hFMbUVivw_sd6ZGUkC';
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
+
+export interface UserProfile {
+  id: string;
+  email?: string | null;
+  username: string;
+  avatar_url?: string | null;
+  streak?: number;
+  last_read?: { chapter: number; verse: number };
+  updated_at?: string;
+}
+
+// 1. Sign In With Google OAuth
+export async function signInWithGoogle(): Promise<{ error: Error | null; url?: string }> {
+  try {
+    const redirectUri = Capacitor.isNativePlatform()
+      ? 'com.gita.wisdom://login-callback'
+      : window.location.origin;
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUri,
+        skipBrowserRedirect: Capacitor.isNativePlatform(),
+      },
+    });
+
+    if (error) {
+      return { error };
+    }
+
+    if (Capacitor.isNativePlatform() && data?.url) {
+      // In native Android, open using Capacitor Browser Custom Tabs
+      await Browser.open({ url: data.url, windowName: '_system' });
+      return { error: null, url: data.url };
+    }
+
+    return { error: null, url: data?.url };
+  } catch (err: unknown) {
+    return { error: err as Error };
+  }
+}
+
+// Handle Deep Link OAuth callback from Android com.gita.wisdom://login-callback
+export async function handleAuthCallback(urlStr: string): Promise<{ session: Session | null; error: Error | null }> {
+  try {
+    // Close Custom Tab if open
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Browser.close();
+      } catch {
+        // Browser was already closed or not opened
+      }
+    }
+
+    // 1. Check if URL has PKCE code parameter
+    // e.g. com.gita.wisdom://login-callback?code=xxx
+    const urlObj = new URL(urlStr.replace('#', '?'));
+    const code = urlObj.searchParams.get('code');
+    if (code) {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) return { session: null, error };
+      return { session: data.session, error: null };
+    }
+
+    // 2. Check if URL has hash fragments with access_token & refresh_token
+    // e.g. com.gita.wisdom://login-callback#access_token=...&refresh_token=...
+    const hashIndex = urlStr.indexOf('#');
+    if (hashIndex !== -1) {
+      const hash = urlStr.substring(hashIndex + 1);
+      const params = new URLSearchParams(hash);
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+
+      if (access_token && refresh_token) {
+        const { data, error } = await supabase.auth.setSession({
+          access_token,
+          refresh_token,
+        });
+        if (error) return { session: null, error };
+        return { session: data.session, error: null };
+      }
+    }
+
+    // 3. Fallback: check getSession
+    const { data: { session }, error } = await supabase.auth.getSession();
+    return { session, error };
+  } catch (err) {
+    return { session: null, error: err as Error };
+  }
+}
+
+// 2. Fetch User Profile from Supabase
+export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Error fetching profile from Supabase:', error);
+      return null;
+    }
+
+    return data as UserProfile | null;
+  } catch (err) {
+    console.warn('Exception fetching profile:', err);
+    return null;
+  }
+}
+
+// 3. Upsert User Profile to Supabase
+export async function upsertUserProfile(profile: Partial<UserProfile> & { id: string }): Promise<{ success: boolean; error: Error | null }> {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        ...profile,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) {
+      console.error('Error saving profile to Supabase:', error);
+      return { success: false, error: new Error(error.message) };
+    }
+
+    return { success: true, error: null };
+  } catch (err) {
+    console.error('Exception saving profile:', err);
+    return { success: false, error: err as Error };
+  }
+}
+
+// 4. Sign Out
+export async function signOutUser(): Promise<void> {
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.warn('Error signing out:', err);
+  }
+}
+
+// 5. Get current active user
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user;
+  } catch {
+    return null;
+  }
+}

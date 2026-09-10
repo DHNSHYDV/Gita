@@ -1,16 +1,36 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ArrowRight, User, X } from 'lucide-react';
+import { ChevronLeft, ArrowRight, User, X, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { getCurrentUser, upsertUserProfile } from '../utils/supabase';
 
 export const OnboardingUsername: React.FC = () => {
   const { userName, setUserName, setCurrentScreen } = useApp();
-  const [inputValue, setInputValue] = useState(userName || 'Dhanush');
+  const [inputValue, setInputValue] = useState(userName || '');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const trimmed = inputValue.trim() || 'Dhanush';
+    setIsSaving(true);
     setUserName(trimmed);
-    setCurrentScreen('onboarding-auth');
+
+    try {
+      // If user signed in with Google, persist to Supabase profiles
+      const user = await getCurrentUser();
+      if (user) {
+        await upsertUserProfile({
+          id: user.id,
+          email: user.email,
+          username: trimmed,
+          avatar_url: user.user_metadata?.avatar_url,
+        });
+      }
+    } catch (err) {
+      console.warn('Profile save warning:', err);
+    }
+
+    setIsSaving(false);
+    setCurrentScreen('onboarding-success');
   };
 
   return (
@@ -20,7 +40,7 @@ export const OnboardingUsername: React.FC = () => {
         <div className="pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))]">
           <motion.button
             whileTap={{ scale: 0.92 }}
-            onClick={() => setCurrentScreen('onboarding-language')}
+            onClick={() => setCurrentScreen('onboarding-auth')}
             className="p-1.5 -ml-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
           >
             <ChevronLeft className="w-6 h-6 stroke-[1.75] text-[#2A241E] dark:text-[#FAF7F2]" />
@@ -74,11 +94,21 @@ export const OnboardingUsername: React.FC = () => {
           <motion.button
             whileTap={{ scale: 0.96 }}
             whileHover={{ scale: 1.02 }}
+            disabled={isSaving}
             onClick={handleContinue}
-            className="w-full max-w-xs py-3.5 px-6 rounded-full bg-[#362719] hover:bg-[#271C11] text-[#FAF4EA] font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-colors"
+            className="w-full max-w-xs py-3.5 px-6 rounded-full bg-[#362719] hover:bg-[#271C11] text-[#FAF4EA] font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-75"
           >
-            <span>Continue</span>
-            <ArrowRight className="w-4 h-4 stroke-[2.2]" />
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 text-[#C59341] animate-spin" />
+                <span>Saving Profile...</span>
+              </>
+            ) : (
+              <>
+                <span>Continue</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.2]" />
+              </>
+            )}
           </motion.button>
         </div>
       </div>

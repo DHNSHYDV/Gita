@@ -20,6 +20,7 @@ import {
   Heart
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { signOutUser } from '../utils/supabase';
 
 export const MoreScreen: React.FC = () => {
   const {
@@ -34,6 +35,7 @@ export const MoreScreen: React.FC = () => {
     navigateToShloka,
     userName,
     isGoogleLinked,
+    setIsGoogleLinked,
     goBack,
     t,
   } = useApp();
@@ -99,10 +101,17 @@ export const MoreScreen: React.FC = () => {
               <h2 className="font-serif font-bold text-base text-[#2A241E] dark:text-[#FAF7F2] truncate">
                 {userName || t.seekLearnLive}
               </h2>
-              {isGoogleLinked && (
+              {isGoogleLinked ? (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                   Google Linked
                 </span>
+              ) : (
+                <button
+                  onClick={() => setCurrentScreen('onboarding-auth')}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 hover:bg-amber-200 transition-colors"
+                >
+                  Link Google
+                </button>
               )}
             </div>
             <p className="text-xs text-[#8A7E6C] dark:text-[#9F9382] mt-0.5">
@@ -312,8 +321,12 @@ export const MoreScreen: React.FC = () => {
         <div className="rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] shadow-xs overflow-hidden">
           <motion.button
             whileTap={{ scale: 0.99 }}
-            onClick={() => {
-              if (window.confirm('Are you sure you want to return to the welcome screen?')) {
+            onClick={async () => {
+              if (window.confirm(isGoogleLinked ? 'Sign out of your account?' : 'Return to welcome screen?')) {
+                if (isGoogleLinked) {
+                  await signOutUser();
+                  setIsGoogleLinked(false);
+                }
                 setCurrentScreen('welcome');
               }
             }}
@@ -321,7 +334,9 @@ export const MoreScreen: React.FC = () => {
           >
             <div className="flex items-center gap-3">
               <LogOut className="w-5 h-5 stroke-[1.75] group-hover:-translate-x-0.5 transition-transform" />
-              <span className="text-sm font-semibold">Switch Account / Restart Tour</span>
+              <span className="text-sm font-semibold">
+                {isGoogleLinked ? 'Sign Out & Switch Account' : 'Switch Account / Restart Tour'}
+              </span>
             </div>
             <ChevronRight className="w-4 h-4 opacity-60" />
           </motion.button>
@@ -329,7 +344,7 @@ export const MoreScreen: React.FC = () => {
 
         {/* Footer Version Info */}
         <div className="text-center pt-2 pb-4 text-xs text-[#9E9281] dark:text-[#6F6557]">
-          <p className="font-serif">Gita v1.4.3 (Production Release)</p>
+          <p className="font-serif">Gita v1.4.6 (Production Release)</p>
           <p className="mt-0.5">Designed with devotion for Google Play Store</p>
         </div>
       </main>
