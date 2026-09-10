@@ -121,7 +121,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
       }
     });
 
-    return matches;
+    return matches.slice(0, 50);
   }, [query, language]);
 
   // Popular / Featured suggestions when query is empty
