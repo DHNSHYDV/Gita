@@ -164,3 +164,88 @@ export async function getCurrentUser(): Promise<User | null> {
     return null;
   }
 }
+
+// 6. Real-time Leaderboard from Supabase Profiles
+export interface RealLeaderboardDevotee {
+  id: string;
+  rank: number;
+  name: string;
+  streakDays: number;
+  avatarUrl?: string | null;
+  isCurrentUser?: boolean;
+}
+
+export async function fetchLeaderboard(): Promise<RealLeaderboardDevotee[]> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, streak, updated_at')
+      .order('streak', { ascending: false })
+      .limit(50);
+
+    if (error || !data) {
+      console.warn('Leaderboard query warning:', error);
+      return [];
+    }
+
+    return data.map((item, index) => ({
+      id: item.id,
+      rank: index + 1,
+      name: item.username || 'Devotee',
+      streakDays: typeof item.streak === 'number' ? item.streak : 1,
+      avatarUrl: item.avatar_url,
+    }));
+  } catch (err) {
+    console.warn('Error fetching leaderboard:', err);
+    return [];
+  }
+}
+
+// 7. Real-time Count of Registered Devotees
+export async function fetchRegisteredDevoteeCount(): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+
+    if (error || typeof count !== 'number') {
+      return 1;
+    }
+    return count;
+  } catch {
+    return 1;
+  }
+}
+
+// 8. Sync Devotee Progress (Streak, Last Read & Bookmarks)
+export async function syncDevoteeProgress(params: {
+  streak?: number;
+  lastRead?: { chapter: number; verse: number };
+  bookmarks?: string[];
+}): Promise<void> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const payload: Record<string, unknown> = {
+      id: user.id,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (typeof params.streak === 'number') {
+      payload.streak = params.streak;
+    }
+
+    if (params.lastRead) {
+      payload.last_read = {
+        chapter: params.lastRead.chapter,
+        verse: params.lastRead.verse,
+        ...(params.bookmarks ? { bookmarks: params.bookmarks } : {}),
+      };
+    }
+
+    await supabase.from('profiles').upsert(payload);
+  } catch (err) {
+    console.warn('Progress sync warning:', err);
+  }
+}

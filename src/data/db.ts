@@ -23,20 +23,32 @@ export const getStoredStreak = (): UserStreakInfo => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_STREAK);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      // Clean up any legacy dummy 72 streak from previous mockup
+      if (parsed.currentStreak === 72 && parsed.totalVersesRead === 144) {
+        const cleanStreak: UserStreakInfo = {
+          currentStreak: 0,
+          longestStreak: 0,
+          lastReadDate: '',
+          totalVersesRead: 0,
+          streakHistory: [],
+        };
+        localStorage.setItem(STORAGE_KEY_STREAK, JSON.stringify(cleanStreak));
+        return cleanStreak;
+      }
+      return parsed;
     }
   } catch {
     // fallback
   }
 
-  // Default starting streak: 72 days as shown in storyboard!
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Real starting streak is 0 until user reads their first verse
   const defaultStreak: UserStreakInfo = {
-    currentStreak: 72,
-    longestStreak: 72,
-    lastReadDate: todayStr,
-    totalVersesRead: 144,
-    streakHistory: [todayStr],
+    currentStreak: 0,
+    longestStreak: 0,
+    lastReadDate: '',
+    totalVersesRead: 0,
+    streakHistory: [],
   };
 
   localStorage.setItem(STORAGE_KEY_STREAK, JSON.stringify(defaultStreak));
@@ -48,22 +60,27 @@ export const recordReadingForStreak = (): UserStreakInfo => {
   const todayStr = new Date().toISOString().split('T')[0];
 
   if (current.lastReadDate === todayStr) {
-    // Already read today, just increment total count
+    // Already read today, increment total count
     current.totalVersesRead += 1;
   } else {
-    // Check if consecutive
-    const lastDate = new Date(current.lastReadDate);
-    const today = new Date(todayStr);
-    const diffDays = Math.round((today.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
-
-    if (diffDays === 1) {
-      current.currentStreak += 1;
-      if (current.currentStreak > current.longestStreak) {
-        current.longestStreak = current.currentStreak;
-      }
-    } else if (diffDays > 1) {
-      // Streak broken, start anew
+    if (!current.lastReadDate) {
+      // First ever reading
       current.currentStreak = 1;
+      current.longestStreak = 1;
+    } else {
+      const lastDate = new Date(current.lastReadDate);
+      const today = new Date(todayStr);
+      const diffDays = Math.round((today.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
+
+      if (diffDays === 1) {
+        current.currentStreak += 1;
+        if (current.currentStreak > current.longestStreak) {
+          current.longestStreak = current.currentStreak;
+        }
+      } else if (diffDays > 1) {
+        // Streak broken, start anew from 1 today
+        current.currentStreak = 1;
+      }
     }
     current.lastReadDate = todayStr;
     current.totalVersesRead += 1;
@@ -77,48 +94,17 @@ export const recordReadingForStreak = (): UserStreakInfo => {
 };
 
 export const getLeaderboardData = (
-  period: 'today' | 'week' | 'all',
-  currentUserName: string = 'Dhanush'
+  _period: 'today' | 'week' | 'all',
+  currentUserName: string = 'Devotee'
 ): LeaderboardEntry[] => {
   const streak = getStoredStreak();
-
-  // Multipliers or adjustments per period
-  const userStreak = streak.currentStreak;
 
   return [
     {
       rank: 1,
-      name: 'Arjun_108',
-      quote: 'Gita is my guide.',
-      streakDays: period === 'today' ? 365 : period === 'week' ? 372 : 450,
-    },
-    {
-      rank: 2,
-      name: 'Sita_Ram',
-      quote: 'Steady in sadhana.',
-      streakDays: period === 'today' ? 280 : period === 'week' ? 287 : 320,
-    },
-    {
-      rank: 3,
-      name: 'Vidyadhar',
-      quote: 'Karma, Always.',
-      streakDays: period === 'today' ? 214 : period === 'week' ? 221 : 250,
-    },
-    {
-      rank: 4,
-      name: 'BhaktiNivas',
-      streakDays: period === 'today' ? 180 : period === 'week' ? 187 : 205,
-    },
-    {
-      rank: 5,
       name: `${currentUserName} (You)`,
       isCurrentUser: true,
-      streakDays: userStreak,
-    },
-    {
-      rank: 6,
-      name: 'GitaPrem',
-      streakDays: period === 'today' ? 60 : period === 'week' ? 67 : 85,
+      streakDays: streak.currentStreak,
     },
   ];
 };

@@ -2,22 +2,79 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Crown, Calendar, Sparkles, CheckCircle2, ChevronLeft, Award } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { getLeaderboardData, getStoredStreak } from '../data/db';
+import { getStoredStreak } from '../data/db';
+import { fetchLeaderboard, fetchRegisteredDevoteeCount, type RealLeaderboardDevotee, getCurrentUser } from '../utils/supabase';
 
 export const DevoteeStreaksScreen: React.FC = () => {
   const { userName, goBack, t } = useApp();
   const [activeTab, setActiveTab] = useState<'top' | 'my' | 'community'>('top');
   const [period, setPeriod] = useState<'today' | 'week' | 'all'>('today');
+  const [cloudLeaderboard, setCloudLeaderboard] = useState<RealLeaderboardDevotee[]>([]);
+  const [devoteeCount, setDevoteeCount] = useState<number>(1);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const streakInfo = getStoredStreak();
-  const leaderboard = getLeaderboardData(period, userName);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isActiveToday = streakInfo.lastReadDate === todayStr;
 
-  // Animated rolling counter for streak days
+  useEffect(() => {
+    const loadRealData = async () => {
+      const user = await getCurrentUser();
+      if (user) setCurrentUserId(user.id);
+
+      const list = await fetchLeaderboard();
+      setCloudLeaderboard(list);
+
+      const count = await fetchRegisteredDevoteeCount();
+      setDevoteeCount(count);
+    };
+    loadRealData();
+  }, []);
+
+  // Compute live leaderboard (merge current user if not yet in database)
+  const displayLeaderboard = (() => {
+    if (cloudLeaderboard.length === 0) {
+      return [
+        {
+          id: 'me',
+          rank: 1,
+          name: `${userName || 'You'}`,
+          streakDays: streakInfo.currentStreak,
+          isCurrentUser: true,
+        },
+      ];
+    }
+
+    const hasMe = cloudLeaderboard.some(d => d.id === currentUserId || (userName && d.name === userName));
+    const formatted = cloudLeaderboard.map((d, idx) => ({
+      ...d,
+      rank: idx + 1,
+      isCurrentUser: d.id === currentUserId || (!!userName && d.name === userName),
+    }));
+
+    if (!hasMe) {
+      formatted.push({
+        id: 'me',
+        rank: formatted.length + 1,
+        name: `${userName || 'You'}`,
+        streakDays: streakInfo.currentStreak,
+        isCurrentUser: true,
+      });
+    }
+
+    return formatted;
+  })();
+
+  // Animated rolling counter for streak days (from 0 to actual real streak)
   const [displayCount, setDisplayCount] = useState(0);
   useEffect(() => {
     let start = 0;
-    const target = streakInfo.currentStreak || 72;
-    const duration = 1000;
+    const target = streakInfo.currentStreak;
+    if (target === 0) {
+      setDisplayCount(0);
+      return;
+    }
+    const duration = 700;
     const stepTime = 20;
     const steps = Math.ceil(duration / stepTime);
     const increment = target / steps;
@@ -34,6 +91,25 @@ export const DevoteeStreaksScreen: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [streakInfo.currentStreak]);
+
+  // Compute real Monday-to-Sunday current week dates
+  const weekDays = (() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
+    const distanceToMonday = (dayOfWeek + 6) % 7;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - distanceToMonday);
+
+    return ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, idx) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + idx);
+      const dateStr = d.toISOString().split('T')[0];
+      const isRead = streakInfo.streakHistory?.includes(dateStr);
+      const isToday = dateStr === todayStr;
+      const isFuture = d > now && !isToday;
+      return { label, dateStr, isRead, isToday, isFuture };
+    });
+  })();
 
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 select-none transition-colors">
@@ -158,7 +234,7 @@ export const DevoteeStreaksScreen: React.FC = () => {
 
             {/* Ranked List with Staggered Entrance */}
             <div className="space-y-2.5">
-              {leaderboard.map((item, idx) => {
+              {displayLeaderboard.map((item, idx) => {
                 const isCurrent = item.isCurrentUser;
 
                 return (
@@ -217,11 +293,9 @@ export const DevoteeStreaksScreen: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        {item.quote && (
-                          <p className="text-[10px] text-[#8A7E6C] dark:text-[#A89D8C] italic truncate">
-                            "{item.quote}"
-                          </p>
-                        )}
+                        <p className="text-[10px] text-[#8A7E6C] dark:text-[#A89D8C] truncate">
+                          {isCurrent ? 'Walking the path of Gita daily' : 'Devoted seeker'}
+                        </p>
                       </div>
                     </div>
 
@@ -314,25 +388,34 @@ export const DevoteeStreaksScreen: React.FC = () => {
                   <Calendar className="w-4 h-4 text-[#C59341]" />
                   This Week's Journey
                 </span>
-                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
+                <span className={`text-[11px] font-semibold flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                  isActiveToday
+                    ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50'
+                    : 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50'
+                }`}>
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Active Today
+                  {isActiveToday ? 'Active Today' : 'Read Today to Glow'}
                 </span>
               </div>
 
               <div className="flex justify-between items-center px-1">
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => (
+                {weekDays.map((day, idx) => (
                   <div key={idx} className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-[#8A7E6C]">{day}</span>
+                    <span className={`text-[10px] font-semibold ${day.isToday ? 'text-[#C59341] font-bold' : 'text-[#8A7E6C]'}`}>
+                      {day.label}
+                    </span>
                     <motion.div
                       whileHover={{ scale: 1.1 }}
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-transform ${
-                        idx <= 4
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                        day.isRead
                           ? 'bg-[#C59341] text-white shadow-xs'
+                          : day.isToday
+                          ? 'border-2 border-[#C59341] text-[#C59341] bg-amber-50 dark:bg-amber-950/40'
                           : 'bg-[#EFE8DD] dark:bg-[#282117] text-[#A89D8D]'
                       }`}
+                      title={`${day.dateStr}${day.isRead ? ' (Completed)' : ''}`}
                     >
-                      {idx <= 4 ? <Flame className="w-3.5 h-3.5 fill-current" /> : '•'}
+                      {day.isRead ? <Flame className="w-3.5 h-3.5 fill-current" /> : day.isToday ? '•' : '•'}
                     </motion.div>
                   </div>
                 ))}
@@ -361,7 +444,11 @@ export const DevoteeStreaksScreen: React.FC = () => {
               </h2>
 
               <p className="text-xs text-[#6B5E4E] dark:text-[#B5A896] leading-relaxed">
-                You are reading alongside <span className="font-bold text-[#C59341] dark:text-[#E8C581]">14,280+ devotees</span> across 42 countries who start every single dawn with sacred Gita shlokas.
+                You are reading alongside{' '}
+                <span className="font-bold text-[#C59341] dark:text-[#E8C581]">
+                  {devoteeCount} registered {devoteeCount === 1 ? 'devotee' : 'devotees'}
+                </span>{' '}
+                connecting with Krishna's eternal wisdom.
               </p>
 
               <div className="pt-2">

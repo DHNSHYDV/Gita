@@ -17,6 +17,7 @@ import { CHAPTERS_DATA } from '../data/chapters';
 import { getVerse } from '../data/verses';
 import { audioPlayer } from '../utils/audio';
 import { recordReadingForStreak } from '../data/db';
+import { syncDevoteeProgress } from '../utils/supabase';
 import { Language, TextSize } from '../types';
 
 interface VerseCardProps {
@@ -322,7 +323,11 @@ export const ShlokaScreen: React.FC = () => {
   // Sync reading position to streak and last-read, and stop previous audio
   useEffect(() => {
     setLastRead({ chapter: selectedChapter, verse: selectedVerse });
-    recordReadingForStreak();
+    const streak = recordReadingForStreak();
+    syncDevoteeProgress({
+      streak: streak.currentStreak,
+      lastRead: { chapter: selectedChapter, verse: selectedVerse }
+    });
     audioPlayer.stop();
   }, [selectedChapter, selectedVerse]);
 

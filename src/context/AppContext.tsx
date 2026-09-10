@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Language, TextSize, ThemeMode, ScreenType } from '../types';
 import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
 import { updateNativeStatusBar } from '../utils/native';
-import { supabase, fetchUserProfile } from '../utils/supabase';
+import { supabase, fetchUserProfile, syncDevoteeProgress } from '../utils/supabase';
 
 interface AppContextType {
   language: Language;
@@ -130,9 +130,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return false;
   };
 
-  // User Profile Name (default "Dhanush" matching storyboard screen 3)
+  // User Profile Name (defaults to '' or saved name)
   const [userName, setUserNameState] = useState<string>(() => {
-    return localStorage.getItem('gita_userName') || 'Dhanush';
+    return localStorage.getItem('gita_userName') || '';
   });
 
   const [isGoogleLinked, setIsGoogleLinkedState] = useState<boolean>(() => {
@@ -142,9 +142,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedChapter, setSelectedChapter] = useState<number>(2);
   const [selectedVerse, setSelectedVerse] = useState<number>(47);
 
+  // Real-time Bookmarks (starts empty, cleans up legacy dummy bookmarks)
   const [bookmarks, setBookmarks] = useState<string[]>(() => {
     const saved = localStorage.getItem('gita_bookmarks');
-    return saved ? JSON.parse(saved) : ["2.47", "4.7", "12.13", "18.66"];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Clear old dummy mockup bookmarks ["2.47", "4.7", "12.13", "18.66"]
+        if (Array.isArray(parsed) && parsed.length === 4 && parsed.join(',') === '2.47,4.7,12.13,18.66') {
+          localStorage.setItem('gita_bookmarks', JSON.stringify([]));
+          return [];
+        }
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   });
 
   const [dailyVerseModalOpen, setDailyVerseModalOpen] = useState<boolean>(false);
@@ -155,11 +169,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : { chapter: 2, verse: 47 };
   });
 
-  const [readingHistory, setReadingHistory] = useState<{ chapter: number; verse: number; date: string }[]>([
-    { chapter: 2, verse: 47, date: 'Today' },
-    { chapter: 4, verse: 7, date: 'Yesterday' },
-    { chapter: 6, verse: 5, date: '2 days ago' }
-  ]);
+  // Real-time Reading History (starts empty, records real shlokas read)
+  const [readingHistory, setReadingHistory] = useState<{ chapter: number; verse: number; date: string }[]>(() => {
+    const saved = localStorage.getItem('gita_readingHistory');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Clear dummy mockup history
+        if (Array.isArray(parsed) && parsed.length === 3 && parsed[0]?.date === 'Today' && parsed[1]?.date === 'Yesterday') {
+          localStorage.setItem('gita_readingHistory', JSON.stringify([]));
+          return [];
+        }
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
@@ -201,6 +228,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLastReadState(prev => {
       if (prev.chapter === pos.chapter && prev.verse === pos.verse) return prev;
       localStorage.setItem('gita_lastRead', JSON.stringify(pos));
+      syncDevoteeProgress({ lastRead: pos });
       return pos;
     });
   }, []);
@@ -210,6 +238,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const exists = prev.includes(verseId);
       const updated = exists ? prev.filter(id => id !== verseId) : [...prev, verseId];
       localStorage.setItem('gita_bookmarks', JSON.stringify(updated));
+      syncDevoteeProgress({ bookmarks: updated, lastRead });
       return updated;
     });
   };
@@ -222,10 +251,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSelectedChapter(chapter);
     setSelectedVerse(verse);
     setLastRead({ chapter, verse });
-    setReadingHistory(prev => [
-      { chapter, verse, date: 'Just now' },
-      ...prev.filter(item => !(item.chapter === chapter && item.verse === verse))
-    ].slice(0, 20));
+    setReadingHistory(prev => {
+      const updated = [
+        { chapter, verse, date: 'Just now' },
+        ...prev.filter(item => !(item.chapter === chapter && item.verse === verse))
+      ].slice(0, 30);
+      localStorage.setItem('gita_readingHistory', JSON.stringify(updated));
+      return updated;
+    });
     setCurrentScreen('shloka');
   };
 
@@ -234,7 +267,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     setTheme(theme);
 
-    // Synchronize Supabase user and profile on startup
+    // Synchronize Supabase user, profile, streak & cloud bookmarks on startup
     const syncUser = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -243,6 +276,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const profile = await fetchUserProfile(session.user.id);
           if (profile?.username) {
             setUserName(profile.username);
+          }
+          if (profile?.last_read) {
+            if (profile.last_read.chapter && profile.last_read.verse) {
+              setLastReadState({ chapter: profile.last_read.chapter, verse: profile.last_read.verse });
+              localStorage.setItem('gita_lastRead', JSON.stringify({ chapter: profile.last_read.chapter, verse: profile.last_read.verse }));
+            }
+            const cloudBookmarks = (profile.last_read as Record<string, unknown>)?.bookmarks;
+            if (Array.isArray(cloudBookmarks) && cloudBookmarks.length > 0) {
+              setBookmarks(cloudBookmarks as string[]);
+              localStorage.setItem('gita_bookmarks', JSON.stringify(cloudBookmarks));
+            }
           }
         }
       } catch (err) {

@@ -344,7 +344,7 @@ export const MoreScreen: React.FC = () => {
 
         {/* Footer Version Info */}
         <div className="text-center pt-2 pb-4 text-xs text-[#9E9281] dark:text-[#6F6557]">
-          <p className="font-serif">Gita v1.4.6 (Production Release)</p>
+          <p className="font-serif">Gita v1.4.7 (Production Release)</p>
           <p className="mt-0.5">Designed with devotion for Google Play Store</p>
         </div>
       </main>
@@ -428,25 +428,33 @@ export const MoreScreen: React.FC = () => {
               </div>
 
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {readingHistory.map((item, idx) => (
-                  <motion.div
-                    key={idx}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setShowHistoryModal(false);
-                      navigateToShloka(item.chapter, item.verse);
-                    }}
-                    className="p-3 rounded-xl bg-[#EFE8DD] dark:bg-[#262019] flex items-center justify-between cursor-pointer hover:bg-[#E7DDCF] dark:hover:bg-[#312920] border border-[#DECDBD]/60 dark:border-[#3A2F22]"
-                  >
-                    <div>
-                      <p className="font-semibold text-xs text-[#2A241E] dark:text-[#FAF7F2]">
-                        {t.chapterLabel} {item.chapter}, {t.shlokaLabel} {item.verse}
-                      </p>
-                      <p className="text-[10px] text-[#8C806F] mt-0.5">{item.date}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-[#A89D8D]" />
-                  </motion.div>
-                ))}
+                {readingHistory.length > 0 ? (
+                  readingHistory.map((item, idx) => (
+                    <motion.div
+                      key={idx}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setShowHistoryModal(false);
+                        navigateToShloka(item.chapter, item.verse);
+                      }}
+                      className="p-3 rounded-xl bg-[#EFE8DD] dark:bg-[#262019] flex items-center justify-between cursor-pointer hover:bg-[#E7DDCF] dark:hover:bg-[#312920] border border-[#DECDBD]/60 dark:border-[#3A2F22]"
+                    >
+                      <div>
+                        <p className="font-semibold text-xs text-[#2A241E] dark:text-[#FAF7F2]">
+                          {t.chapterLabel} {item.chapter}, {t.shlokaLabel} {item.verse}
+                        </p>
+                        <p className="text-[10px] text-[#8C806F] mt-0.5">{item.date}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#A89D8D]" />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-xs text-[#8A7E6C] dark:text-[#9F9382] space-y-1">
+                    <Clock className="w-8 h-8 mx-auto mb-2 opacity-40 stroke-[1.5]" />
+                    <p className="font-semibold text-[#2A241E] dark:text-[#FAF7F2]">No Reading History Yet</p>
+                    <p className="text-[11px] text-[#8A7E6C]">As you contemplate shlokas, your journey will appear here.</p>
+                  </div>
+                )}
               </div>
 
               <button
