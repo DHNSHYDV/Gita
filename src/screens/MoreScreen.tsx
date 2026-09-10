@@ -12,7 +12,9 @@ import {
   ChevronRight,
   Sparkles,
   Sun,
-  X
+  X,
+  Flame,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -125,6 +127,27 @@ export const MoreScreen: React.FC = () => {
               </span>
             </div>
             <ChevronRight className="w-4 h-4 text-[#B0A595] dark:text-[#6F6455]" />
+          </div>
+
+          {/* Devotee Streaks & Sadhana */}
+          <div
+            onClick={() => setCurrentScreen('streaks')}
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#F3EBE0] dark:hover:bg-[#25201A] transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-950/60 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                <Flame className="w-4 h-4 fill-orange-500/20" />
+              </div>
+              <span className="text-sm font-medium text-[#2A241E] dark:text-[#FAF7F2]">
+                Devotee Streaks & Sadhana
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                72 Days 🔥
+              </span>
+              <ChevronRight className="w-4 h-4 text-[#B0A595] dark:text-[#6F6455]" />
+            </div>
           </div>
 
           {/* My Bookmarks */}
@@ -260,9 +283,27 @@ export const MoreScreen: React.FC = () => {
           </div>
         </div>
 
+        {/* Sign Out Card */}
+        <div className="rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] shadow-sm overflow-hidden">
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to sign out?')) {
+                setCurrentScreen('welcome');
+              }
+            }}
+            className="w-full flex items-center justify-between p-4 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/25 transition-colors group cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-sm font-semibold">Sign Out</span>
+            </div>
+            <ChevronRight className="w-4 h-4 opacity-60" />
+          </button>
+        </div>
+
         {/* Footer Version Info */}
         <div className="text-center pt-2 pb-4 text-xs text-[#9E9281] dark:text-[#6F6557]">
-          <p>Gita v1.0.0 (Build 1)</p>
+          <p>Gita v1.2.0 (Build 3)</p>
           <p className="mt-0.5">Designed for Google Play Store</p>
         </div>
       </main>

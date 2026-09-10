@@ -64,6 +64,7 @@ export interface UIStrings {
   // Bottom Nav
   tabHome: string;
   tabChapters: string;
+  tabStreaks: string;
   tabBookmarks: string;
   tabMore: string;
 }
@@ -119,6 +120,7 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "Share with Friends",
     tabHome: "Home",
     tabChapters: "Chapters",
+    tabStreaks: "Streaks",
     tabBookmarks: "Bookmarks",
     tabMore: "More"
   },
@@ -172,6 +174,7 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "Share with Friends",
     tabHome: "Home",
     tabChapters: "Chapters",
+    tabStreaks: "Streaks",
     tabBookmarks: "Bookmarks",
     tabMore: "More"
   },
@@ -225,6 +228,7 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "मित्रों से साझा करें",
     tabHome: "होम",
     tabChapters: "अध्याय",
+    tabStreaks: "स्ट्रीक्स",
     tabBookmarks: "बुकमार्क",
     tabMore: "अन्य"
   },
@@ -278,6 +282,7 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "நண்பர்களுடன் பகிரவும்",
     tabHome: "முகப்பு",
     tabChapters: "அத்தியாயங்கள்",
+    tabStreaks: "ஸ்ட்ரீக்ஸ்",
     tabBookmarks: "புக்மார்க்",
     tabMore: "மேலும்"
   },
@@ -331,6 +336,7 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "ಸ್ನೇಹಿತರೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಿ",
     tabHome: "ಮುಖಪುಟ",
     tabChapters: "ಅಧ್ಯಾಯಗಳು",
+    tabStreaks: "ಸ್ಟ್ರೀಕ್ಸ್",
     tabBookmarks: "ಬುಕ್‌ಮಾರ್ಕ್",
     tabMore: "ಇನ್ನಷ್ಟು"
   }

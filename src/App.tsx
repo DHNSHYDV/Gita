@@ -12,6 +12,7 @@ import { ChapterListScreen } from './screens/ChapterListScreen';
 import { ShlokaScreen } from './screens/ShlokaScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { BookmarksScreen } from './screens/BookmarksScreen';
+import { DevoteeStreaksScreen } from './screens/DevoteeStreaksScreen';
 import { MoreScreen } from './screens/MoreScreen';
 import { DailyVerseModal } from './screens/DailyVerseModal';
 
@@ -40,6 +41,8 @@ export const AppContent: React.FC = () => {
         return <SettingsScreen />;
       case 'bookmarks':
         return <BookmarksScreen />;
+      case 'streaks':
+        return <DevoteeStreaksScreen />;
       case 'more':
         return <MoreScreen />;
       default:
@@ -48,7 +51,7 @@ export const AppContent: React.FC = () => {
   };
 
   // Screens that display the bottom 4-tab navigation
-  const showBottomNav = ['home', 'chapters', 'bookmarks', 'more'].includes(currentScreen);
+  const showBottomNav = ['home', 'chapters', 'streaks', 'bookmarks', 'more'].includes(currentScreen);
 
   return (
     <MobileFrame>

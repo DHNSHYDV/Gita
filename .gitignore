@@ -33,3 +33,4 @@ android/app/.cxx/
 
 # Local properties
 android/local.properties
+*.idsig

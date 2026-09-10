@@ -48,5 +48,6 @@ export type ScreenType =
   | 'shloka'
   | 'settings'
   | 'bookmarks'
+  | 'streaks'
   | 'more'
   | 'reading-history';

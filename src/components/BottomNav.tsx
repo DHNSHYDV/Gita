@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, Bookmark, MoreHorizontal } from 'lucide-react';
+import { Home, BookOpen, Flame, MoreHorizontal } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ScreenType } from '../types';
 
@@ -9,7 +9,7 @@ export const BottomNav: React.FC = () => {
   const tabs: { id: ScreenType; label: string; icon: React.ReactNode }[] = [
     { id: 'home', label: t.tabHome, icon: <Home className="w-5 h-5" /> },
     { id: 'chapters', label: t.tabChapters, icon: <BookOpen className="w-5 h-5" /> },
-    { id: 'bookmarks', label: t.tabBookmarks, icon: <Bookmark className="w-5 h-5" /> },
+    { id: 'streaks', label: t.tabStreaks || 'Streaks', icon: <Flame className="w-5 h-5" /> },
     { id: 'more', label: t.tabMore, icon: <MoreHorizontal className="w-5 h-5" /> },
   ];
 

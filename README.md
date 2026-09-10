@@ -3,20 +3,22 @@
 [![Android Version](https://img.shields.io/badge/Android-10%20to%2015%20(API%2023--35)-brightgreen.svg)](https://developer.android.com)
 [![Platform](https://img.shields.io/badge/Platform-Capacitor%20%7C%20React%20%7C%20Android-blue.svg)](https://capacitorjs.com)
 [![Languages](https://img.shields.io/badge/Languages-Telugu%20%7C%20English%20%7C%20Hindi%20%7C%20Tamil%20%7C%20Kannada-orange.svg)](#multi-language-support)
-[![Release](https://img.shields.io/badge/Release-v1.0.0-gold.svg)](https://github.com/dhnshydv/Gita/releases)
+[![Release](https://img.shields.io/badge/Release-v1.2.0-gold.svg)](https://github.com/dhnshydv/Gita/releases)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
-A sacred, serene, and beautifully crafted mobile application for **Shreemad Bhagavad Gita**, designed specifically for Google Play Store. Featuring full support for 5 languages (**Telugu, English, Hindi, Tamil, Kannada**), audio chanting recitation, 100% offline verse reading, and a distraction-free spiritual reading experience.
+A sacred, serene, and beautifully crafted mobile application for **Shreemad Bhagavad Gita**, designed specifically for Google Play Store. Featuring full support for 5 languages (**Telugu, English, Hindi, Tamil, Kannada**), audio chanting recitation, realistic 3D book page-turn flipping animations, Devotee Streaks & Leaderboard, 100% offline verse reading, and a distraction-free spiritual reading experience.
 
 ---
 
 ## 📱 App Highlights & Features
 
-### 1. 8 Pixel-Perfect Screens
-1. **Splash / Welcome:** Full-bleed celestial artwork of Lord Krishna & Arjuna on the golden chariot overlooking Kurukshetra at sunset, with the sacred motto *"धर्मो रक्षति रक्षितः ।"* and *"Begin the Journey →"*.
-2. **Home Screen:** Warm glowing **Daily Wisdom Quote card**, **"Continue Reading"** card (resumes exactly where you left off), 2x2 chapter preview grid, and bottom navigation.
-3. **Chapter List (All 18 Chapters):** Numbered ivory badge cards with chapter names, English titles, and shloka counts (47 to 78 shlokas).
-4. **Shloka Reading Screen:**
+### Pixel-Perfect Screens & Features
+1. **Splash / Welcome:** Full-bleed celestial artwork of Lord Krishna & Arjuna on the golden chariot overlooking Kurukshetra at sunset, with the sacred motto *"ధర్మో రక్షతి రక్షితః ।"* and *"Begin the Journey →"*.
+2. **First-Time User Onboarding (4 Steps):** Language selection, Devotee Username input, optional Google Account sync, and beautiful welcome transition.
+3. **Home Screen:** Warm glowing **Daily Wisdom Quote card**, **"Continue Reading"** card (resumes exactly where you left off), **Quick Access bar** (Chapters, Bookmarks, Devotee Streaks, More), 2x2 chapter preview grid, and bottom navigation.
+4. **Chapter List (All 18 Chapters):** Numbered ivory badge cards with chapter names, English titles, and shloka counts (47 to 78 shlokas).
+5. **Shloka Reading Screen with 3D Page Turn Animation:**
+   - **Realistic 3D Book Page Flipping:** Seamless curl-and-flip animation with dynamic light/shadow sweep when navigating next/previous verses.
    - Shloka carousel stepper (`< శ్లోకం 47 / 72 >`).
    - Sacred Sanskrit shloka rendered in chosen native script (Telugu, Devanagari, Tamil, Kannada, Roman transliteration).
    - **Audio Chanting Player:** Sacred bell chime and clear recitation.
@@ -24,14 +26,20 @@ A sacred, serene, and beautifully crafted mobile application for **Shreemad Bhag
    - **భావార్థం (Word Translation / Meaning)**.
    - **సారాంశం (Philosophical Essence / Purport)**.
    - Floating Previous & Next navigation buttons.
-5. **Language & Display Settings:**
+6. **Devotee Streaks & Sadhana Leaderboard:**
+   - Real-time persistent daily reading streaks with flame counters.
+   - Top Readers Leaderboard with rank crowns (👑 Gold, 🥈 Silver, 🥉 Bronze), devotee names (Arjun_108, Sita_Ram, Vidyadhar, BhaktiNivas, GitaPrem), and current user highlight (`Dhanush (You)` with 72-day streak).
+   - Time filters: All-Time, Monthly, Weekly.
+   - Weekly Sadhana activity calendar and community devotion metrics.
+7. **Language & Display Settings:**
    - One-tap language switcher: **Telugu (తెలుగు), English, Hindi (हिंदी), Tamil (தமிழ்), Kannada (ಕನ್ನಡ)**.
    - Reading font size controls (**A / A / A**).
    - Theme mode (**Light / Dark / System**).
    - Daily Verse notification toggle.
-6. **Bookmarks Screen:** Instant access to saved verses (pre-loaded with iconic verses *2.47, 4.7, 12.13, 18.66*).
-7. **Daily Verse Story Screen:** Full-bleed celestial painting of Lord Krishna playing the golden murali (flute) amongst glowing clouds, with inspiring daily quote, *"Read in Context →"*, and Share actions.
-8. **More / Profile Screen:** Devotional profile card (*"Seek. Learn. Live."*), reading history, about Gita info, and Google Play Store review link.
+8. **Bookmarks Screen:** Instant access to saved verses (pre-loaded with iconic verses *2.47, 4.7, 12.13, 18.66*).
+9. **Daily Verse Story Screen:** Full-bleed celestial painting of Lord Krishna playing the golden murali (flute) amongst glowing clouds, with inspiring daily quote, *"Read in Context →"*, and Share actions.
+10. **More / Profile Screen:** Devotional profile card, Devotee Streaks shortcut, reading history, about Gita info, Google Play Store review link, and red Sign Out button.
+11. **Clean Native Android Shell:** Zero simulated/fake status bar icons; utilizes full edge-to-edge native Android OS bar.
 
 ---
 

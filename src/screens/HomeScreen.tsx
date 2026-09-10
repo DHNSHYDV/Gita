@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, User, ChevronRight, Sparkles, BookOpen, X } from 'lucide-react';
+import { Search, User, ChevronRight, Sparkles, BookOpen, Bookmark, Flame, MoreHorizontal, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CHAPTERS_DATA } from '../data/chapters';
+import { getStoredStreak } from '../data/db';
 
 export const HomeScreen: React.FC = () => {
   const {
@@ -18,6 +19,7 @@ export const HomeScreen: React.FC = () => {
 
   // Get chapter 2 info for continue reading card
   const lastReadChapter = CHAPTERS_DATA.find(c => c.number === lastRead.chapter) || CHAPTERS_DATA[1];
+  const streakInfo = getStoredStreak();
   
   // First 4 chapters for the 2x2 preview grid
   const previewChapters = CHAPTERS_DATA.slice(0, 4);
@@ -159,6 +161,62 @@ export const HomeScreen: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-white/70 dark:bg-[#2E271D] flex items-center justify-center text-[#786C5A] dark:text-[#E8C581] group-hover:translate-x-0.5 transition-transform">
               <ChevronRight className="w-4 h-4" />
             </div>
+          </div>
+        </div>
+
+        {/* Quick Access Row */}
+        <div>
+          <div className="grid grid-cols-4 gap-2.5">
+            <button
+              onClick={() => setCurrentScreen('chapters')}
+              className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#EDE3D3]/70 dark:bg-[#1F1B15] border border-[#DDD0BC] dark:border-[#332A1E] hover:bg-[#E5D8C4] dark:hover:bg-[#28221A] transition-all group shadow-sm active:scale-95"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#E4D5BE] dark:bg-[#2C241A] flex items-center justify-center text-[#8A5A1B] dark:text-[#E8C581] mb-1.5 group-hover:scale-110 transition-transform">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-medium text-[#4A3E2E] dark:text-[#D5C6B1] text-center truncate max-w-full">
+                {t.tabChapters}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setCurrentScreen('bookmarks')}
+              className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#EDE3D3]/70 dark:bg-[#1F1B15] border border-[#DDD0BC] dark:border-[#332A1E] hover:bg-[#E5D8C4] dark:hover:bg-[#28221A] transition-all group shadow-sm active:scale-95"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#E4D5BE] dark:bg-[#2C241A] flex items-center justify-center text-[#8A5A1B] dark:text-[#E8C581] mb-1.5 group-hover:scale-110 transition-transform">
+                <Bookmark className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-medium text-[#4A3E2E] dark:text-[#D5C6B1] text-center truncate max-w-full">
+                {t.tabBookmarks}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setCurrentScreen('streaks')}
+              className="relative flex flex-col items-center justify-center p-3 rounded-2xl bg-[#EDE3D3]/70 dark:bg-[#1F1B15] border border-[#DDD0BC] dark:border-[#332A1E] hover:bg-[#E5D8C4] dark:hover:bg-[#28221A] transition-all group shadow-sm active:scale-95"
+            >
+              <div className="relative w-10 h-10 rounded-full bg-[#FCE8D4] dark:bg-[#341F14] flex items-center justify-center text-[#D95B12] dark:text-[#F88D48] mb-1.5 group-hover:scale-110 transition-transform shadow-inner">
+                <Flame className="w-5 h-5 fill-[#D95B12]/20" />
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 bg-[#C2410C] text-[9px] font-bold text-white rounded-full">
+                  {streakInfo.currentStreak}d
+                </span>
+              </div>
+              <span className="text-[11px] font-medium text-[#4A3E2E] dark:text-[#D5C6B1] text-center truncate max-w-full">
+                Streaks
+              </span>
+            </button>
+
+            <button
+              onClick={() => setCurrentScreen('more')}
+              className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#EDE3D3]/70 dark:bg-[#1F1B15] border border-[#DDD0BC] dark:border-[#332A1E] hover:bg-[#E5D8C4] dark:hover:bg-[#28221A] transition-all group shadow-sm active:scale-95"
+            >
+              <div className="w-10 h-10 rounded-full bg-[#E4D5BE] dark:bg-[#2C241A] flex items-center justify-center text-[#8A5A1B] dark:text-[#E8C581] mb-1.5 group-hover:scale-110 transition-transform">
+                <MoreHorizontal className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-medium text-[#4A3E2E] dark:text-[#D5C6B1] text-center truncate max-w-full">
+                {t.tabMore}
+              </span>
+            </button>
           </div>
         </div>
 
