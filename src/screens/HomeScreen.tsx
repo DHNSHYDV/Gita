@@ -5,6 +5,7 @@ import { CHAPTERS_DATA } from '../data/chapters';
 import { getStoredStreak } from '../data/db';
 
 import { motion } from 'framer-motion';
+import { SearchOverlay } from '../components/SearchOverlay';
 
 export const HomeScreen: React.FC = () => {
   const {
@@ -16,7 +17,6 @@ export const HomeScreen: React.FC = () => {
     setDailyVerseModalOpen,
   } = useApp();
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Chapter info for continue reading card
@@ -52,14 +52,6 @@ export const HomeScreen: React.FC = () => {
 
   const currentQuote = dailyQuotes[language] || dailyQuotes.en;
 
-  // Filtered chapters if search is active
-  const filteredChapters = searchQuery.trim()
-    ? CHAPTERS_DATA.filter(c => 
-        c.title[language].toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.number.toString() === searchQuery.trim()
-      )
-    : [];
-
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 transition-colors">
       {/* Top Header - Brought 1 cm below top to keep blank safe region */}
@@ -74,7 +66,7 @@ export const HomeScreen: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            onClick={() => setIsSearchOpen(true)}
             className="p-2.5 rounded-full text-[#6E6353] dark:text-[#B0A595] hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
             title="Search"
           >
@@ -90,58 +82,8 @@ export const HomeScreen: React.FC = () => {
         </div>
       </header>
 
-      {/* Search Bar dropdown */}
-      {isSearchOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          className="px-5 py-3 bg-[#EFE7DA] dark:bg-[#1C1814] border-b border-[#E0D5C3] dark:border-[#2C251C]"
-        >
-          <div className="relative flex items-center">
-            <Search className="w-4 h-4 absolute left-3 text-[#8A7E6C]" strokeWidth={1.75} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.searchPlaceholder}
-              autoFocus
-              className="w-full pl-9 pr-8 py-2 text-sm rounded-xl bg-white dark:bg-[#26201A] border border-[#D5C9B7] dark:border-[#3E3427] focus:outline-none focus:ring-2 focus:ring-[#C59341] text-[#2A241E] dark:text-[#FAF7F2]"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 text-[#8A7E6C] hover:text-[#2A241E]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {searchQuery.trim() && (
-            <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
-              {filteredChapters.length > 0 ? (
-                filteredChapters.map(c => (
-                  <div
-                    key={c.id}
-                    onClick={() => {
-                      navigateToShloka(c.number, 1);
-                      setIsSearchOpen(false);
-                      setSearchQuery('');
-                    }}
-                    className="p-2.5 rounded-xl bg-white dark:bg-[#26201A] text-xs flex justify-between items-center cursor-pointer hover:bg-[#F8F2E8] dark:hover:bg-[#332A20] transition-colors"
-                  >
-                    <span className="font-medium text-[#2A241E] dark:text-[#FAF7F2]">{c.number}. {c.title[language]}</span>
-                    <span className="text-[#968977]">{c.versesCount} {t.shlokasCountLabel}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-[#8A7E6C] text-center py-2">No chapters found</p>
-              )}
-            </div>
-          )}
-        </motion.div>
-      )}
+      {/* Comprehensive Search Overlay for Chapters, Shlokas & Topics */}
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       <main className="px-5 pt-4 space-y-5">
         {/* Daily Quote Card (Serene, warm parchment card with gold accents) */}
