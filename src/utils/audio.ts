@@ -1,68 +1,74 @@
-// Audio Player for Gita Shlokas using Web Speech API + Sacred Temple Bell Chime
+// Authentic Audio Engine for Gita Shlokas:
+// 1. Pristine Sanskrit Chanting (Authentic recorded Vedic Temple Audio for all 701 verses)
+// 2. Regional Accent Speech Engine (Native Telugu, Hindi, Tamil, Kannada, and Indian English enunciation)
+
 class SacredAudioPlayer {
   private isPlaying: boolean = false;
+  private currentMode: 'chant' | 'speech' | null = null;
+  private audioEl: HTMLAudioElement | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
-  private audioCtx: AudioContext | null = null;
-  private onStateChange: ((playing: boolean) => void) | null = null;
+  private onStateChange: ((playing: boolean, mode: 'chant' | 'speech' | null) => void) | null = null;
 
   constructor() {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        // Voices loaded
+    if (typeof window !== 'undefined') {
+      this.audioEl = new Audio();
+      this.audioEl.preload = 'auto';
+
+      this.audioEl.onplay = () => {
+        this.isPlaying = true;
+        this.currentMode = 'chant';
+        this.notifyState();
       };
+
+      this.audioEl.onended = () => {
+        this.stop();
+      };
+
+      this.audioEl.onerror = () => {
+        // If MP3 fails (e.g. offline), stop gracefully
+        this.stop();
+      };
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          // Voices preloaded
+        };
+      }
     }
   }
 
-  public setListener(listener: (playing: boolean) => void) {
+  public setListener(listener: (playing: boolean, mode: 'chant' | 'speech' | null) => void) {
     this.onStateChange = listener;
   }
 
-  private playBellChime() {
-    try {
-      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtxClass) return;
-      
-      const ctx = new AudioCtxClass();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      // Soothing bell resonant frequency (C# 554 Hz)
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(554.37, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(277.18, ctx.currentTime + 1.2);
-      
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.start();
-      osc.stop(ctx.currentTime + 1.5);
-    } catch {
-      // Audio context may be restricted before user gesture
+  private notifyState() {
+    if (this.onStateChange) {
+      this.onStateChange(this.isPlaying, this.currentMode);
     }
   }
 
+  // Tactile page turn audio (soothing paper rustle, no electronic beep)
   public playPageTurn(): void {
     try {
-      const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtxClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtxClass) return;
       const ctx = new AudioCtxClass();
-      const bufferSize = Math.floor(ctx.sampleRate * 0.07);
+      const bufferSize = Math.floor(ctx.sampleRate * 0.06);
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
       }
       const noise = ctx.createBufferSource();
       noise.buffer = buffer;
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.value = 1400;
+      filter.frequency.value = 1200;
       const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.035, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07);
+      gain.gain.setValueAtTime(0.025, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.06);
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
@@ -72,68 +78,134 @@ class SacredAudioPlayer {
     }
   }
 
-  public playShloka(text: string, langCode: string = 'sa-IN'): void {
+  // 1. Play Authentic Vedic Sanskrit Temple Chanting MP3
+  public playAuthenticChant(chapterNumber: number, verseNumber: number): void {
     this.stop();
-    this.playBellChime();
+
+    const audioUrl = `https://raw.githubusercontent.com/nikhilsi/gitavani/main/android/GitaVani/app/src/main/assets/audio/BG${chapterNumber}.${verseNumber}.mp3`;
+
+    if (!this.audioEl) {
+      this.audioEl = new Audio();
+    }
+
+    this.audioEl.src = audioUrl;
+    this.audioEl
+      .play()
+      .then(() => {
+        this.isPlaying = true;
+        this.currentMode = 'chant';
+        this.notifyState();
+      })
+      .catch(() => {
+        this.stop();
+      });
+  }
+
+  // 2. Play Regional Accent Speech for Translations & Meanings
+  public playRegionalSpeech(text: string, language: string): void {
+    this.stop();
 
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       return;
     }
 
-    // Short delay after sacred chime to start recitation
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.85; // Slow, respectful chanting cadence
-      utterance.pitch = 0.95; // Warm, resonant tone
+    // Clean text of verse numbers and special symbols
+    const cleanText = text
+      .replace(/[0-9]+\.[0-9]+/g, '')
+      .replace(/[|।॥✦🕉️]/g, ' ')
+      .trim();
 
-      // Pick best matching voice
-      const voices = window.speechSynthesis.getVoices();
-      let voice = voices.find(v => v.lang.startsWith(langCode) || v.lang.startsWith('hi') || v.lang.startsWith('te'));
-      if (!voice) {
-        voice = voices.find(v => v.lang.includes('IN') || v.lang.startsWith('en'));
-      }
-      if (voice) {
-        utterance.voice = voice;
-      }
+    if (!cleanText) return;
 
-      utterance.onstart = () => {
-        this.isPlaying = true;
-        if (this.onStateChange) this.onStateChange(true);
-      };
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.88; // Reverent, clear, contemplative tempo
+    utterance.pitch = 1.0;
 
-      utterance.onend = () => {
-        this.isPlaying = false;
-        if (this.onStateChange) this.onStateChange(false);
-      };
+    // Map language to regional BCP-47 locale
+    const localeMap: Record<string, string> = {
+      te: 'te-IN', // Telugu (India)
+      hi: 'hi-IN', // Hindi (India)
+      ta: 'ta-IN', // Tamil (India)
+      kn: 'kn-IN', // Kannada (India)
+      en: 'en-IN', // Indian English
+    };
 
-      utterance.onerror = () => {
-        this.isPlaying = false;
-        if (this.onStateChange) this.onStateChange(false);
-      };
+    const targetLocale = localeMap[language] || 'hi-IN';
+    utterance.lang = targetLocale;
 
-      this.currentUtterance = utterance;
-      window.speechSynthesis.speak(utterance);
-    }, 400);
+    // Pick best regional voice if available
+    const voices = window.speechSynthesis.getVoices();
+    let bestVoice = voices.find(
+      (v) => v.lang === targetLocale || v.lang.replace('_', '-').startsWith(targetLocale)
+    );
+
+    if (!bestVoice) {
+      bestVoice = voices.find((v) => v.lang.startsWith(targetLocale.slice(0, 2)));
+    }
+    if (!bestVoice) {
+      bestVoice = voices.find((v) => v.lang.includes('IN'));
+    }
+
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+    }
+
+    utterance.onstart = () => {
+      this.isPlaying = true;
+      this.currentMode = 'speech';
+      this.notifyState();
+    };
+
+    utterance.onend = () => {
+      this.stop();
+    };
+
+    utterance.onerror = () => {
+      this.stop();
+    };
+
+    this.currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
   }
 
+  // Stop any currently playing chant or speech
   public stop(): void {
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.currentTime = 0;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
     this.isPlaying = false;
-    if (this.onStateChange) this.onStateChange(false);
+    this.currentMode = null;
+    this.notifyState();
   }
 
-  public toggle(text: string, langCode?: string): void {
-    if (this.isPlaying) {
+  // Smart Toggle: Plays authentic chant or stops
+  public toggleChant(chapterNumber: number, verseNumber: number): void {
+    if (this.isPlaying && this.currentMode === 'chant') {
       this.stop();
     } else {
-      this.playShloka(text, langCode);
+      this.playAuthenticChant(chapterNumber, verseNumber);
+    }
+  }
+
+  // Toggle Regional Speech
+  public toggleRegionalSpeech(text: string, language: string): void {
+    if (this.isPlaying && this.currentMode === 'speech') {
+      this.stop();
+    } else {
+      this.playRegionalSpeech(text, language);
     }
   }
 
   public getStatus(): boolean {
     return this.isPlaying;
+  }
+
+  public getMode(): 'chant' | 'speech' | null {
+    return this.currentMode;
   }
 }
 

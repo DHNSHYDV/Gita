@@ -15,6 +15,7 @@ import { BookmarksScreen } from './screens/BookmarksScreen';
 import { DevoteeStreaksScreen } from './screens/DevoteeStreaksScreen';
 import { MoreScreen } from './screens/MoreScreen';
 import { DailyVerseModal } from './screens/DailyVerseModal';
+import { UpdateModal } from './components/UpdateModal';
 import { registerHardwareBackListener } from './utils/native';
 
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
@@ -112,6 +113,7 @@ export const AppContent: React.FC = () => {
       </AnimatePresence>
       {showBottomNav && <BottomNav />}
       <DailyVerseModal />
+      <UpdateModal />
       {toastMessage && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}

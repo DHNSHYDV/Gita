@@ -25,9 +25,11 @@ interface VerseCardProps {
   language: Language;
   textSize: TextSize;
   isPlaying?: boolean;
+  audioMode?: 'chant' | 'speech' | null;
   bookmarked?: boolean;
   copied?: boolean;
   onPlayAudio?: () => void;
+  onPlaySpeech?: (text: string) => void;
   onToggleBookmark?: () => void;
   onShare?: () => void;
   onCycleTextSize?: () => void;
@@ -48,9 +50,11 @@ const VerseCard: React.FC<VerseCardProps> = ({
   language,
   textSize,
   isPlaying = false,
+  audioMode = null,
   bookmarked = false,
   copied = false,
   onPlayAudio,
+  onPlaySpeech,
   onToggleBookmark,
   onShare,
   onCycleTextSize,
@@ -113,13 +117,21 @@ const VerseCard: React.FC<VerseCardProps> = ({
           whileTap={{ scale: 0.94 }}
           onClick={onPlayAudio}
           className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all ${
-            isPlaying
+            isPlaying && audioMode === 'chant'
               ? 'text-[#966C28] dark:text-[#E8C581] bg-[#F2E5D0] dark:bg-[#2F271B] font-semibold'
               : 'text-[#6E6353] dark:text-[#9F9382] hover:bg-[#EFE8DC] dark:hover:bg-[#25201A]'
           }`}
         >
-          {isPlaying ? <VolumeX className="w-5 h-5 animate-pulse" strokeWidth={1.75} /> : <Volume2 className="w-5 h-5" strokeWidth={1.75} />}
-          <span className="text-[11px] mt-1 font-medium">{isPlaying ? stopLabel : playLabel}</span>
+          {isPlaying && audioMode === 'chant' ? (
+            <div className="flex items-center gap-0.5 h-5">
+              <span className="w-1 h-3 bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1 h-4 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1 h-2 bg-current rounded-full animate-bounce" />
+            </div>
+          ) : (
+            <Volume2 className="w-5 h-5" strokeWidth={1.75} />
+          )}
+          <span className="text-[11px] mt-1 font-medium">{isPlaying && audioMode === 'chant' ? stopLabel : 'Chant'}</span>
         </motion.button>
 
         <motion.button
@@ -173,42 +185,65 @@ const VerseCard: React.FC<VerseCardProps> = ({
         transition={{ duration: 0.3, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
         className="rounded-3xl p-5 bg-[#FAF7F2] dark:bg-[#1B1713] border border-[#E8E1D5] dark:border-[#2E261E] shadow-xs"
       >
-        {/* Sliding Tab Header */}
-        <div className="flex items-center gap-6 border-b border-[#EAE1D3] dark:border-[#2D251C] pb-2 mb-3.5 relative">
-          <button
-            onClick={() => setActiveTab('meaning')}
-            className={`text-xs md:text-sm font-semibold transition-colors pb-1 relative ${
-              activeTab === 'meaning'
-                ? 'text-[#2A231A] dark:text-[#FAF7F2]'
-                : 'text-[#827666] dark:text-[#8C8072] hover:text-[#4A3D2E]'
-            }`}
-          >
-            {meaningTitle}
-            {activeTab === 'meaning' && (
-              <motion.div
-                layoutId="activeMeaningTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#966C28] dark:bg-[#E8C581] rounded-full"
-                transition={{ type: 'spring', stiffness: 500, damping: 38 }}
-              />
-            )}
-          </button>
+        {/* Sliding Tab Header with Regional Accent Listen Button */}
+        <div className="flex items-center justify-between border-b border-[#EAE1D3] dark:border-[#2D251C] pb-2 mb-3.5 relative">
+          <div className="flex items-center gap-5">
+            <button
+              onClick={() => setActiveTab('meaning')}
+              className={`text-xs md:text-sm font-semibold transition-colors pb-1 relative ${
+                activeTab === 'meaning'
+                  ? 'text-[#2A231A] dark:text-[#FAF7F2]'
+                  : 'text-[#827666] dark:text-[#8C8072] hover:text-[#4A3D2E]'
+              }`}
+            >
+              {meaningTitle}
+              {activeTab === 'meaning' && (
+                <motion.div
+                  layoutId="activeMeaningTab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#966C28] dark:bg-[#E8C581] rounded-full"
+                  transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                />
+              )}
+            </button>
 
+            <button
+              onClick={() => setActiveTab('purport')}
+              className={`text-xs md:text-sm font-semibold transition-colors pb-1 relative ${
+                activeTab === 'purport'
+                  ? 'text-[#2A231A] dark:text-[#FAF7F2]'
+                  : 'text-[#827666] dark:text-[#8C8072] hover:text-[#4A3D2E]'
+              }`}
+            >
+              {purportTitle}
+              {activeTab === 'purport' && (
+                <motion.div
+                  layoutId="activeMeaningTab"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#966C28] dark:bg-[#E8C581] rounded-full"
+                  transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                />
+              )}
+            </button>
+          </div>
+
+          {/* Regional Accent Speech Button */}
           <button
-            onClick={() => setActiveTab('purport')}
-            className={`text-xs md:text-sm font-semibold transition-colors pb-1 relative ${
-              activeTab === 'purport'
-                ? 'text-[#2A231A] dark:text-[#FAF7F2]'
-                : 'text-[#827666] dark:text-[#8C8072] hover:text-[#4A3D2E]'
+            onClick={() => {
+              const text = activeTab === 'meaning' ? translationData.translation : translationData.purport;
+              if (onPlaySpeech) onPlaySpeech(text);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+              isPlaying && audioMode === 'speech'
+                ? 'bg-[#C59341] text-white shadow-xs'
+                : 'bg-[#EAE0D0]/80 dark:bg-[#282119]/80 text-[#6E6353] dark:text-[#AFA494] hover:text-[#2A241E] dark:hover:text-[#FAF7F2]'
             }`}
+            title="Listen to explanation in regional accent"
           >
-            {purportTitle}
-            {activeTab === 'purport' && (
-              <motion.div
-                layoutId="activeMeaningTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#966C28] dark:bg-[#E8C581] rounded-full"
-                transition={{ type: 'spring', stiffness: 500, damping: 38 }}
-              />
+            {isPlaying && audioMode === 'speech' ? (
+              <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+            ) : (
+              <Volume2 className="w-3.5 h-3.5" />
             )}
+            <span className="text-[11px]">{isPlaying && audioMode === 'speech' ? stopLabel : 'Listen'}</span>
           </button>
         </div>
 
@@ -262,6 +297,7 @@ export const ShlokaScreen: React.FC = () => {
   } = useApp();
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [audioMode, setAudioMode] = useState<'chant' | 'speech' | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [turnDirection, setTurnDirection] = useState<'next' | 'prev'>('next');
   const [bookmarkToast, setBookmarkToast] = useState<string | null>(null);
@@ -272,16 +308,18 @@ export const ShlokaScreen: React.FC = () => {
   const currentChapterData = CHAPTERS_DATA.find((c) => c.number === selectedChapter) || CHAPTERS_DATA[1];
   const totalVersesInChapter = currentChapterData.versesCount;
 
-  // Sync reading position to streak and last-read
+  // Sync reading position to streak and last-read, and stop previous audio
   useEffect(() => {
     setLastRead({ chapter: selectedChapter, verse: selectedVerse });
     recordReadingForStreak();
+    audioPlayer.stop();
   }, [selectedChapter, selectedVerse, setLastRead]);
 
   // Handle audio state
   useEffect(() => {
-    audioPlayer.setListener((playing: boolean) => {
+    audioPlayer.setListener((playing: boolean, mode: 'chant' | 'speech' | null) => {
       setIsPlaying(playing);
+      setAudioMode(mode);
     });
     return () => {
       audioPlayer.setListener(() => {});
@@ -328,13 +366,14 @@ export const ShlokaScreen: React.FC = () => {
     }
   };
 
-  // Toggle audio chanting
+  // Toggle authentic Sanskrit temple chanting
   const handlePlayAudio = () => {
-    const verseData = getVerse(selectedChapter, selectedVerse);
-    const translationData = verseData.translations[language] || verseData.translations.en;
-    const textToChant = translationData.scriptShloka || verseData.sanskrit;
-    const langCode = language === 'te' ? 'te-IN' : language === 'hi' ? 'hi-IN' : language === 'ta' ? 'ta-IN' : language === 'kn' ? 'kn-IN' : 'sa-IN';
-    audioPlayer.toggle(textToChant, langCode);
+    audioPlayer.toggleChant(selectedChapter, selectedVerse);
+  };
+
+  // Toggle regional voice recitation of translation
+  const handlePlaySpeech = (text: string) => {
+    audioPlayer.toggleRegionalSpeech(text, language);
   };
 
   // Bookmark with discreet toast
@@ -455,9 +494,11 @@ export const ShlokaScreen: React.FC = () => {
             language={language}
             textSize={textSize}
             isPlaying={isPlaying}
+            audioMode={audioMode}
             bookmarked={bookmarked}
             copied={copied}
             onPlayAudio={handlePlayAudio}
+            onPlaySpeech={handlePlaySpeech}
             onToggleBookmark={handleToggleBookmark}
             onShare={handleShare}
             onCycleTextSize={handleCycleTextSize}
