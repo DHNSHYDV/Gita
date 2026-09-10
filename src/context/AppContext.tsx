@@ -37,6 +37,7 @@ interface AppContextType {
   setIsGoogleLinked: (linked: boolean) => void;
   onboardingCompleted: boolean;
   setOnboardingCompleted: (completed: boolean) => void;
+  screenDirection: number;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,8 +63,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentScreen, setCurrentScreenState] = useState<ScreenType>('welcome');
   const [navStack, setNavStack] = useState<ScreenType[]>(['welcome']);
   const [openSettingsFromScreen, setOpenSettingsFromScreen] = useState<ScreenType | null>(null);
+  const [screenDirection, setScreenDirection] = useState<number>(1);
+
+  const TAB_ORDER: Record<string, number> = {
+    'home': 0,
+    'chapters': 1,
+    'streaks': 2,
+    'bookmarks': 3,
+    'more': 4,
+  };
 
   const setCurrentScreen = (screen: ScreenType) => {
+    if (screen in TAB_ORDER && currentScreen in TAB_ORDER) {
+      setScreenDirection(TAB_ORDER[screen] >= TAB_ORDER[currentScreen] ? 1 : -1);
+    } else {
+      setScreenDirection(1);
+    }
     setCurrentScreenState(screen);
     setNavStack(prev => {
       if (prev[prev.length - 1] === screen) return prev;
@@ -93,6 +108,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 3. Pop navigation stack if history exists
     if (navStack.length > 1) {
+      setScreenDirection(-1);
       const nextStack = [...navStack];
       nextStack.pop();
       const previousScreen = nextStack[nextStack.length - 1];
@@ -103,6 +119,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 4. Return to home if on secondary screen
     if (currentScreen !== 'home' && currentScreen !== 'welcome') {
+      setScreenDirection(-1);
       setCurrentScreenState('home');
       setNavStack(['home']);
       return true;
@@ -250,6 +267,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsGoogleLinked,
         onboardingCompleted,
         setOnboardingCompleted,
+        screenDirection,
       }}
     >
       {children}

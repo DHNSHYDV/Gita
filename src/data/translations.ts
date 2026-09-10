@@ -67,6 +67,8 @@ export interface UIStrings {
   tabStreaks: string;
   tabBookmarks: string;
   tabMore: string;
+  sadhanaCircle: string;
+  walkingTogether: string;
 }
 
 export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
@@ -122,7 +124,9 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     tabChapters: "Chapters",
     tabStreaks: "Streaks",
     tabBookmarks: "Bookmarks",
-    tabMore: "More"
+    tabMore: "More",
+    sadhanaCircle: "సాధనా సర్కిల్",
+    walkingTogether: "తోటి సాధకులు"
   },
   en: {
     appName: "Gita",
@@ -176,7 +180,9 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     tabChapters: "Chapters",
     tabStreaks: "Streaks",
     tabBookmarks: "Bookmarks",
-    tabMore: "More"
+    tabMore: "More",
+    sadhanaCircle: "Sadhana Circle",
+    walkingTogether: "Walking the path together"
   },
   hi: {
     appName: "Gita",
@@ -228,9 +234,11 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "मित्रों से साझा करें",
     tabHome: "होम",
     tabChapters: "अध्याय",
-    tabStreaks: "स्ट्रीक्स",
+    tabStreaks: "साधना",
     tabBookmarks: "बुकमार्क",
-    tabMore: "अन्य"
+    tabMore: "अन्य",
+    sadhanaCircle: "साधना मंडल",
+    walkingTogether: "एक ही पथ के पथिक"
   },
   ta: {
     appName: "Gita",
@@ -282,9 +290,11 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "நண்பர்களுடன் பகிரவும்",
     tabHome: "முகப்பு",
     tabChapters: "அத்தியாயங்கள்",
-    tabStreaks: "ஸ்ட்ரீக்ஸ்",
+    tabStreaks: "சாதனா",
     tabBookmarks: "புக்மார்க்",
-    tabMore: "மேலும்"
+    tabMore: "மேலும்",
+    sadhanaCircle: "சாதனா வட்டம்",
+    walkingTogether: "ஆன்மீகப் பயணிகள்"
   },
   kn: {
     appName: "Gita",
@@ -336,8 +346,10 @@ export const UI_TRANSLATIONS: Record<Language, UIStrings> = {
     shareWithFriends: "ಸ್ನೇಹಿತರೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಿ",
     tabHome: "ಮುಖಪುಟ",
     tabChapters: "ಅಧ್ಯಾಯಗಳು",
-    tabStreaks: "ಸ್ಟ್ರೀಕ್ಸ್",
+    tabStreaks: "ಸಾಧನಾ",
     tabBookmarks: "ಬುಕ್‌ಮಾರ್ಕ್",
-    tabMore: "ಇನ್ನಷ್ಟು"
+    tabMore: "ಇನ್ನಷ್ಟು",
+    sadhanaCircle: "ಸಾಧನಾ ವೃತ್ತ",
+    walkingTogether: "ಜೊತೆಯಾಗಿ ನಡೆಯುವ ಸಾಧಕರು"
   }
 };

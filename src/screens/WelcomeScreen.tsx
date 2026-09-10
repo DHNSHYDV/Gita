@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -14,7 +15,7 @@ export const WelcomeScreen: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden flex flex-col justify-between items-center select-none animate-fadeIn">
+    <div className="relative w-full h-full min-h-screen overflow-hidden flex flex-col justify-between items-center select-none">
       {/* High-Resolution Full-Bleed Chariot Battlefield Artwork */}
       <div className="absolute inset-0 w-full h-full z-0">
         <img
@@ -23,12 +24,18 @@ export const WelcomeScreen: React.FC = () => {
           className="w-full h-full object-cover object-center filter brightness-[1.01] contrast-[1.02]"
         />
         {/* Subtle top and bottom gradients for perfect typography readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F5E7D0]/30 via-transparent 30% via-transparent 70% to-[#1A120B]/60 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#F5E7D0]/30 via-transparent 30% via-transparent 70% to-[#1A120B]/65 pointer-events-none" />
       </div>
 
       {/* Top Header: Gita Title & Subtitle */}
-      <div className="relative z-10 w-full pt-10 md:pt-12 px-6 flex flex-col items-center text-center">
-        <img
+      <motion.div
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 w-full pt-12 md:pt-14 px-6 flex flex-col items-center text-center"
+      >
+        <motion.img
+          whileHover={{ scale: 1.05 }}
           src="/logo.png"
           alt="Gita Sacred Emblem"
           className="w-16 h-16 rounded-2xl shadow-xl shadow-black/25 mb-3 border border-[#E8D4B4]/60"
@@ -41,27 +48,34 @@ export const WelcomeScreen: React.FC = () => {
           <br />
           for a Better You
         </p>
-      </div>
+      </motion.div>
 
       {/* Spacer to let the divine scene of Krishna & Arjuna breathe */}
-      <div className="flex-1"></div>
+      <div className="flex-1" />
 
       {/* Bottom Section: Begin the Journey Button & Motto */}
-      <div className="relative z-10 w-full max-w-[290px] px-4 pb-12 flex flex-col items-center">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="relative z-10 w-full max-w-[290px] px-4 pb-12 flex flex-col items-center"
+      >
         {/* "Begin the Journey →" Pill Button */}
-        <button
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.02 }}
           onClick={handleBegin}
-          className="w-full py-3.5 px-6 rounded-full bg-[#F5E6CC] hover:bg-[#EEDBBF] active:scale-95 text-[#2A1D11] font-semibold text-sm md:text-base shadow-xl shadow-black/30 flex items-center justify-center gap-2 transition-all duration-200"
+          className="w-full py-3.5 px-6 rounded-full bg-[#F5E6CC] hover:bg-[#EEDBBF] text-[#2A1D11] font-semibold text-sm md:text-base shadow-xl shadow-black/30 flex items-center justify-center gap-2 transition-colors"
         >
           <span>{t.beginJourney}</span>
           <ArrowRight className="w-4 h-4 stroke-[2.2]" />
-        </button>
+        </motion.button>
 
         {/* Sacred Sanskrit Motto */}
         <p className="mt-5 text-xs md:text-sm font-serif font-medium tracking-widest text-[#E8DAC2] drop-shadow-md">
           {t.motto}
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

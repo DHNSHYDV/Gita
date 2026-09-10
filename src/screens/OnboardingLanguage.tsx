@@ -1,30 +1,32 @@
 import React from 'react';
-import { ChevronLeft, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ArrowRight, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Language } from '../types';
 
 export const OnboardingLanguage: React.FC = () => {
   const { language, setLanguage, setCurrentScreen } = useApp();
 
-  const languagesList: { code: Language; label: string }[] = [
-    { code: 'te', label: 'Telugu (తెలుగు)' },
-    { code: 'en', label: 'English' },
-    { code: 'hi', label: 'Hindi (हिंदी)' },
-    { code: 'ta', label: 'Tamil (தமிழ்)' },
-    { code: 'kn', label: 'Kannada (ಕನ್ನಡ)' },
+  const languagesList: { code: Language; label: string; script: string }[] = [
+    { code: 'te', label: 'Telugu', script: 'తెలుగు' },
+    { code: 'en', label: 'English', script: 'English' },
+    { code: 'hi', label: 'Hindi', script: 'हिन्दी' },
+    { code: 'ta', label: 'Tamil', script: 'தமிழ்' },
+    { code: 'kn', label: 'Kannada', script: 'ಕನ್ನಡ' },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] flex flex-col justify-between p-6 select-none transition-colors animate-fadeIn">
+    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] flex flex-col justify-between p-6 select-none transition-colors">
       {/* Top Header */}
       <div>
         <div className="flex items-center justify-between pt-2">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.92 }}
             onClick={() => setCurrentScreen('welcome')}
             className="p-1.5 -ml-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
           >
-            <ChevronLeft className="w-6 h-6 text-[#2A241E] dark:text-[#FAF7F2]" />
-          </button>
+            <ChevronLeft className="w-6 h-6 stroke-[1.75] text-[#2A241E] dark:text-[#FAF7F2]" />
+          </motion.button>
           <button
             onClick={() => setCurrentScreen('onboarding-username')}
             className="text-xs font-semibold text-[#8C6D3F] dark:text-[#E8C581] hover:underline px-2 py-1"
@@ -44,38 +46,45 @@ export const OnboardingLanguage: React.FC = () => {
 
         {/* Heading & Subheading */}
         <div className="text-center px-4">
-          <h1 className="font-serif text-2xl font-bold text-[#2A2319] dark:text-[#FAF7F2] tracking-tight">
-            Choose Your Language
+          <h1 className="font-serif text-2xl md:text-3xl font-bold text-[#2A2319] dark:text-[#FAF7F2] tracking-tight">
+            Choose Your Sacred Tongue
           </h1>
-          <p className="mt-1.5 text-xs text-[#7E7363] dark:text-[#A89D8C]">
-            Read and understand the Gita in your own language
+          <p className="mt-1.5 text-xs md:text-sm text-[#7E7363] dark:text-[#A89D8C]">
+            Experience the verses, meanings and purports in your native script
           </p>
         </div>
 
         {/* Language Selection Card */}
-        <div className="mt-6 rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] divide-y divide-[#EAE2D5]/70 dark:divide-[#28221B] shadow-sm overflow-hidden">
-          {languagesList.map((item) => {
+        <div className="mt-6 rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] divide-y divide-[#EAE2D5]/70 dark:divide-[#28221B] shadow-xs overflow-hidden">
+          {languagesList.map((item, idx) => {
             const isSelected = language === item.code;
             return (
-              <div
+              <motion.div
                 key={item.code}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => setLanguage(item.code)}
                 className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F3EBE0] dark:hover:bg-[#25201A] transition-colors"
               >
-                <span className={`text-sm md:text-base ${isSelected ? 'font-semibold text-[#2A241E] dark:text-[#FAF7F2]' : 'text-[#5A4F3F] dark:text-[#B5A896]'}`}>
-                  {item.label}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm md:text-base ${isSelected ? 'font-bold text-[#2A241E] dark:text-[#FAF7F2]' : 'text-[#5A4F3F] dark:text-[#B5A896]'}`}>
+                    {item.label}
+                  </span>
+                  <span className="text-xs text-[#8A7E6C] dark:text-[#7A7062]">
+                    ({item.script})
+                  </span>
+                </div>
 
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                   isSelected
-                    ? 'border-[#966C28] dark:border-[#E8C581]'
+                    ? 'border-[#C59341] bg-[#C59341]'
                     : 'border-[#B8AB98] dark:border-[#524738]'
                 }`}>
-                  {isSelected && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#966C28] dark:bg-[#E8C581]"></div>
-                  )}
+                  {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -83,16 +92,18 @@ export const OnboardingLanguage: React.FC = () => {
 
       {/* Bottom Continue Section */}
       <div className="pt-6 pb-4 flex flex-col items-center">
-        <button
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.02 }}
           onClick={() => setCurrentScreen('onboarding-username')}
-          className="w-full max-w-xs py-3.5 px-6 rounded-full bg-[#362719] hover:bg-[#271C11] active:scale-95 text-[#FAF4EA] font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-all duration-200"
+          className="w-full max-w-xs py-3.5 px-6 rounded-full bg-[#362719] hover:bg-[#271C11] text-[#FAF4EA] font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-colors"
         >
           <span>Continue</span>
           <ArrowRight className="w-4 h-4 stroke-[2.2]" />
-        </button>
+        </motion.button>
 
         <p className="mt-4 text-[11px] text-[#8C806F] dark:text-[#8D8274] font-medium tracking-wide">
-          The same wisdom. In your language. ॐ
+          The same eternal wisdom. In your language. ॐ
         </p>
       </div>
     </div>

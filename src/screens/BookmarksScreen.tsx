@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bookmark as BookmarkIcon, ChevronRight, ChevronLeft, Search, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CHAPTERS_DATA } from '../data/chapters';
@@ -23,7 +24,7 @@ export const BookmarksScreen: React.FC = () => {
       chapterNumber,
       verseNumber,
       chapterTitle: chapter.title[language],
-      snippet: snippet.length > 28 ? snippet.slice(0, 28) + '...' : snippet,
+      snippet: snippet.length > 32 ? snippet.slice(0, 32) + '...' : snippet,
     };
   });
 
@@ -36,18 +37,19 @@ export const BookmarksScreen: React.FC = () => {
     : bookmarkItems;
 
   return (
-    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 transition-colors">
+    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 select-none transition-colors">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-[#EAE2D5] dark:border-[#28221B]">
         <div className="flex items-center gap-2">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.92 }}
             onClick={goBack}
             className="p-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors text-[#2A241E] dark:text-[#FAF7F2]"
             title="Back"
           >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <h1 className="font-semibold text-xl text-[#2A241E] dark:text-[#FAF7F2]">
+            <ChevronLeft className="w-6 h-6 stroke-[1.75]" />
+          </motion.button>
+          <h1 className="font-serif font-bold text-xl text-[#2A241E] dark:text-[#FAF7F2]">
             {t.myBookmarks}
           </h1>
         </div>
@@ -57,66 +59,84 @@ export const BookmarksScreen: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="w-28 focus:w-44 transition-all duration-200 pl-7 pr-2 py-1 text-xs rounded-full bg-[#EFE8DD] dark:bg-[#25201A] border border-[#DCD0BE] dark:border-[#383023] focus:outline-none focus:ring-1 focus:ring-[#C59341]"
+            placeholder="Search verses..."
+            className="w-32 focus:w-48 transition-all duration-300 pl-7 pr-2.5 py-1 text-xs rounded-full bg-[#EFE8DD] dark:bg-[#25201A] border border-[#DCD0BE] dark:border-[#383023] focus:outline-none focus:ring-1 focus:ring-[#C59341] text-[#2A241E] dark:text-[#FAF7F2]"
           />
           <Search className="w-3.5 h-3.5 absolute left-2 text-[#8A7E6C] pointer-events-none" />
         </div>
       </header>
 
       {/* Bookmarks List */}
-      <main className="px-5 py-4 space-y-3">
-        {filteredBookmarks.length > 0 ? (
-          filteredBookmarks.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => navigateToShloka(item.chapterNumber, item.verseNumber)}
-              className="flex items-center justify-between p-4 rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] hover:border-[#C59341]/60 dark:hover:border-[#C59341]/60 cursor-pointer shadow-sm hover:shadow transition-all group"
-            >
-              <div className="flex items-center gap-3.5">
-                {/* Bookmark Gold Ribbon Badge */}
-                <div className="w-10 h-10 rounded-xl bg-[#F4EADB] dark:bg-[#2C2419] flex items-center justify-center flex-shrink-0 text-[#966C28] dark:text-[#E8C581]">
-                  <BookmarkIcon className="w-5 h-5 fill-current" />
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-[#2A241E] dark:text-[#FAF7F2]">
-                      {item.id}
-                    </span>
-                    <span className="font-medium text-xs text-[#2A241E] dark:text-[#FAF7F2] truncate max-w-[170px]">
-                      {item.snippet}
-                    </span>
+      <main className="px-5 py-4 space-y-3 max-w-md mx-auto">
+        <AnimatePresence mode="popLayout">
+          {filteredBookmarks.length > 0 ? (
+            filteredBookmarks.map((item, idx) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.25, delay: idx * 0.03 }}
+                onClick={() => navigateToShloka(item.chapterNumber, item.verseNumber)}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center justify-between p-4 rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] hover:border-[#C59341]/60 dark:hover:border-[#C59341]/60 cursor-pointer shadow-xs hover:shadow-sm transition-all group"
+              >
+                <div className="flex items-center gap-3.5 min-w-0 pr-2">
+                  {/* Bookmark Gold Ribbon Badge */}
+                  <div className="w-10 h-10 rounded-xl bg-[#F4EADB] dark:bg-[#2C2419] flex items-center justify-center flex-shrink-0 text-[#C59341] dark:text-[#E8C581] shadow-2xs">
+                    <BookmarkIcon className="w-5 h-5 fill-current" />
                   </div>
-                  <p className="text-xs text-[#8A7E6C] dark:text-[#9B8F7D] mt-0.5">
-                    {item.chapterTitle}
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleBookmark(item.id);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 text-[#A89D8D] hover:text-rose-600 transition-opacity"
-                  title="Remove bookmark"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-                <ChevronRight className="w-5 h-5 text-[#B0A595] dark:text-[#6F6455] group-hover:translate-x-0.5 group-hover:text-[#966C28] dark:group-hover:text-[#E8C581] transition-all" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-serif font-bold text-sm text-[#2A241E] dark:text-[#FAF7F2]">
+                        {item.id}
+                      </span>
+                      <span className="font-medium text-xs text-[#5A4E3D] dark:text-[#D5C7B5] truncate">
+                        {item.snippet}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#8A7E6C] dark:text-[#9B8F7D] mt-0.5 truncate font-serif">
+                      {item.chapterTitle}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBookmark(item.id);
+                    }}
+                    className="p-2 text-[#A89D8D] hover:text-rose-600 transition-colors"
+                    title="Remove bookmark"
+                  >
+                    <Trash2 className="w-4 h-4 stroke-[1.75]" />
+                  </motion.button>
+                  <ChevronRight className="w-4 h-4 text-[#B0A595] dark:text-[#6F6455] group-hover:translate-x-0.5 group-hover:text-[#C59341] dark:group-hover:text-[#E8C581] transition-all" />
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-20 px-6 space-y-3"
+            >
+              <div className="w-16 h-16 rounded-full bg-[#EFE7D8] dark:bg-[#251E17] flex items-center justify-center mx-auto text-[#C59341]">
+                <BookmarkIcon className="w-8 h-8 stroke-[1.5]" />
               </div>
-            </div>
-          ))
-        ) : (
-          <div className="text-center py-16 px-4">
-            <BookmarkIcon className="w-12 h-12 mx-auto text-[#C5B8A6] dark:text-[#4A3F31] mb-3 stroke-1" />
-            <p className="text-sm font-medium text-[#7A6E5D] dark:text-[#9F9382]">
-              {t.emptyBookmarks}
-            </p>
-          </div>
-        )}
+              <h3 className="font-serif font-bold text-base text-[#2A241E] dark:text-[#FAF7F2]">
+                No Bookmarks Yet
+              </h3>
+              <p className="text-xs text-[#7A6E5D] dark:text-[#9F9382] max-w-xs mx-auto leading-relaxed">
+                {t.emptyBookmarks}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

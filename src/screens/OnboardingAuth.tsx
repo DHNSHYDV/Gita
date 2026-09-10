@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, Cloud, Smartphone, Users } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -15,16 +16,17 @@ export const OnboardingAuth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] flex flex-col justify-between p-6 select-none transition-colors animate-fadeIn">
+    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] flex flex-col justify-between p-6 select-none transition-colors">
       {/* Top Header */}
       <div>
         <div className="pt-2">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.92 }}
             onClick={() => setCurrentScreen('onboarding-username')}
             className="p-1.5 -ml-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
           >
-            <ChevronLeft className="w-6 h-6 text-[#2A241E] dark:text-[#FAF7F2]" />
-          </button>
+            <ChevronLeft className="w-6 h-6 stroke-[1.75] text-[#2A241E] dark:text-[#FAF7F2]" />
+          </motion.button>
         </div>
 
         {/* Sacred Lotus Icon */}
@@ -38,19 +40,21 @@ export const OnboardingAuth: React.FC = () => {
 
         {/* Title & Subtitle */}
         <div className="text-center px-4">
-          <h1 className="font-serif text-2xl font-bold text-[#2A2319] dark:text-[#FAF7F2] tracking-tight">
-            Link Your Google Account
+          <h1 className="font-serif text-2xl md:text-3xl font-bold text-[#2A2319] dark:text-[#FAF7F2] tracking-tight">
+            Preserve Your Sacred Progress
           </h1>
-          <p className="mt-1.5 text-xs text-[#7E7363] dark:text-[#A89D8C] leading-relaxed">
-            Save your progress, sync across devices and be part of the Gita community.
+          <p className="mt-1.5 text-xs md:text-sm text-[#7E7363] dark:text-[#A89D8C] leading-relaxed">
+            Sync your bookmarks, streaks and reflections securely across all your devices.
           </p>
         </div>
 
         {/* Google Sign-in Button */}
-        <div className="mt-7">
-          <button
+        <div className="mt-7 max-w-sm mx-auto">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.01 }}
             onClick={handleGoogleSignIn}
-            className="w-full py-3.5 px-4 rounded-2xl bg-white dark:bg-[#1E1914] border border-[#DDD3C2] dark:border-[#382F24] hover:bg-[#FDFBF7] dark:hover:bg-[#26201A] active:scale-[0.98] shadow-sm flex items-center justify-center gap-3 transition-all"
+            className="w-full py-3.5 px-4 rounded-2xl bg-white dark:bg-[#1E1914] border border-[#DDD3C2] dark:border-[#382F24] hover:bg-[#FDFBF7] dark:hover:bg-[#26201A] shadow-xs flex items-center justify-center gap-3 transition-all"
           >
             {/* Google G Logo SVG */}
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -74,30 +78,30 @@ export const OnboardingAuth: React.FC = () => {
             <span className="font-semibold text-sm text-[#3C3224] dark:text-[#E8DAC2]">
               Continue with Google
             </span>
-          </button>
+          </motion.button>
         </div>
 
         {/* Benefits Checklist */}
-        <div className="mt-8 space-y-4 px-2">
+        <div className="mt-8 space-y-4 px-2 max-w-sm mx-auto">
           <div className="flex items-center gap-3.5 text-xs text-[#524534] dark:text-[#C5B7A4]">
-            <div className="w-8 h-8 rounded-full bg-[#EFE6D8] dark:bg-[#282117] flex items-center justify-center text-[#966C28] dark:text-[#E8C581] flex-shrink-0">
-              <Cloud className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full bg-[#EFE6D8] dark:bg-[#282117] flex items-center justify-center text-[#C59341] dark:text-[#E8C581] flex-shrink-0">
+              <Cloud className="w-4 h-4 stroke-[1.75]" />
             </div>
-            <span className="font-medium">Your progress is safe</span>
+            <span className="font-medium">Continuous cloud backup for your streak</span>
           </div>
 
           <div className="flex items-center gap-3.5 text-xs text-[#524534] dark:text-[#C5B7A4]">
-            <div className="w-8 h-8 rounded-full bg-[#EFE6D8] dark:bg-[#282117] flex items-center justify-center text-[#966C28] dark:text-[#E8C581] flex-shrink-0">
-              <Smartphone className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full bg-[#EFE6D8] dark:bg-[#282117] flex items-center justify-center text-[#C59341] dark:text-[#E8C581] flex-shrink-0">
+              <Smartphone className="w-4 h-4 stroke-[1.75]" />
             </div>
-            <span className="font-medium">Access on all your devices</span>
+            <span className="font-medium">Seamless reading experience across devices</span>
           </div>
 
           <div className="flex items-center gap-3.5 text-xs text-[#524534] dark:text-[#C5B7A4]">
-            <div className="w-8 h-8 rounded-full bg-[#EFE6D8] dark:bg-[#282117] flex items-center justify-center text-[#966C28] dark:text-[#E8C581] flex-shrink-0">
-              <Users className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full bg-[#EFE6D8] dark:bg-[#282117] flex items-center justify-center text-[#C59341] dark:text-[#E8C581] flex-shrink-0">
+              <Users className="w-4 h-4 stroke-[1.75]" />
             </div>
-            <span className="font-medium">Join the global Gita community</span>
+            <span className="font-medium">Participate in the global Sadhana Circle</span>
           </div>
         </div>
       </div>
@@ -105,11 +109,11 @@ export const OnboardingAuth: React.FC = () => {
       {/* Bottom Skip Section */}
       <div className="pt-6 pb-6 text-center">
         <p className="text-xs text-[#8C806F] dark:text-[#9B8F7E]">
-          You can also continue later
+          You can always link your account later in More
         </p>
         <button
           onClick={handleSkip}
-          className="mt-1 text-xs font-semibold text-[#8C6D3F] dark:text-[#E8C581] underline hover:text-[#2A241E] transition-colors"
+          className="mt-1.5 text-xs font-semibold text-[#8C6D3F] dark:text-[#E8C581] underline hover:text-[#2A241E] transition-colors"
         >
           Skip for now
         </button>

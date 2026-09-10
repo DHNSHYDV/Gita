@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ArrowRight, User, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -13,16 +14,17 @@ export const OnboardingUsername: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] flex flex-col justify-between p-6 select-none transition-colors animate-fadeIn">
+    <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] flex flex-col justify-between p-6 select-none transition-colors">
       {/* Top Header */}
       <div>
         <div className="pt-2">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.92 }}
             onClick={() => setCurrentScreen('onboarding-language')}
             className="p-1.5 -ml-1.5 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors"
           >
-            <ChevronLeft className="w-6 h-6 text-[#2A241E] dark:text-[#FAF7F2]" />
-          </button>
+            <ChevronLeft className="w-6 h-6 stroke-[1.75] text-[#2A241E] dark:text-[#FAF7F2]" />
+          </motion.button>
         </div>
 
         {/* Sacred Lotus Icon */}
@@ -36,18 +38,18 @@ export const OnboardingUsername: React.FC = () => {
 
         {/* Title & Subtitle */}
         <div className="text-center px-4">
-          <h1 className="font-serif text-2xl font-bold text-[#2A2319] dark:text-[#FAF7F2] tracking-tight">
+          <h1 className="font-serif text-2xl md:text-3xl font-bold text-[#2A2319] dark:text-[#FAF7F2] tracking-tight">
             What should we call you?
           </h1>
-          <p className="mt-1.5 text-xs text-[#7E7363] dark:text-[#A89D8C]">
-            This name will be visible to the Gita community (Leaderboard)
+          <p className="mt-1.5 text-xs md:text-sm text-[#7E7363] dark:text-[#A89D8C]">
+            Your name will walk alongside fellow devotees in the Sadhana Circle
           </p>
         </div>
 
         {/* Input Card with User Icon & Clear Button */}
-        <div className="mt-8">
-          <div className="flex items-center px-4 py-3.5 rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] shadow-sm focus-within:ring-2 focus-within:ring-[#C59341]/50">
-            <User className="w-5 h-5 text-[#8A7E6C] mr-3" />
+        <div className="mt-8 max-w-sm mx-auto">
+          <div className="flex items-center px-4 py-3.5 rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] shadow-xs focus-within:ring-2 focus-within:ring-[#C59341]/60 transition-all">
+            <User className="w-5 h-5 stroke-[1.75] text-[#8A7E6C] mr-3" />
             <input
               type="text"
               value={inputValue}
@@ -61,7 +63,7 @@ export const OnboardingUsername: React.FC = () => {
                 onClick={() => setInputValue('')}
                 className="p-1 rounded-full text-[#A89D8D] hover:text-[#4A3F30]"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 stroke-[2]" />
               </button>
             )}
           </div>
@@ -69,13 +71,15 @@ export const OnboardingUsername: React.FC = () => {
 
         {/* Continue Button */}
         <div className="mt-6 flex justify-center">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.02 }}
             onClick={handleContinue}
-            className="w-full max-w-xs py-3.5 px-6 rounded-full bg-[#362719] hover:bg-[#271C11] active:scale-95 text-[#FAF4EA] font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-all duration-200"
+            className="w-full max-w-xs py-3.5 px-6 rounded-full bg-[#362719] hover:bg-[#271C11] text-[#FAF4EA] font-semibold text-sm shadow-xl flex items-center justify-center gap-2 transition-colors"
           >
             <span>Continue</span>
             <ArrowRight className="w-4 h-4 stroke-[2.2]" />
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -87,8 +91,8 @@ export const OnboardingUsername: React.FC = () => {
             alt="Peacock feather"
             className="w-16 h-16 transform -rotate-12 drop-shadow-sm opacity-90"
           />
-          <p className="font-serif italic text-xs md:text-sm text-[#7D705E] dark:text-[#B5A795] max-w-[170px] leading-relaxed">
-            "A small step towards a better you begins here."
+          <p className="font-serif italic text-xs md:text-sm text-[#7D705E] dark:text-[#B5A795] max-w-[190px] leading-relaxed">
+            "A small step of devotion begins a lifetime of peace."
           </p>
         </div>
       </div>

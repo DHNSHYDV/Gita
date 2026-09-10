@@ -9,9 +9,47 @@
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Regional Script Safe Line-Height & Rendering */
+  .lang-te, [lang="te"] {
+    font-family: 'Noto Serif Telugu', 'Noto Sans Telugu', serif;
+    line-height: 1.85 !important;
+  }
+  .lang-hi, [lang="hi"] {
+    font-family: 'Noto Sans Devanagari', 'Noto Serif Devanagari', sans-serif;
+    line-height: 1.8 !important;
+  }
+  .lang-ta, [lang="ta"] {
+    font-family: 'Noto Sans Tamil', 'Noto Serif Tamil', sans-serif;
+    line-height: 1.85 !important;
+  }
+  .lang-kn, [lang="kn"] {
+    font-family: 'Noto Sans Kannada', 'Noto Serif Kannada', sans-serif;
+    line-height: 1.85 !important;
   }
 }
+
+/* Sacred Shloka Typography Style */
+.shloka-text {
+  font-family: 'Noto Serif Devanagari', 'Noto Serif Telugu', 'Cinzel', serif;
+  line-height: 2.1;
+  letter-spacing: 0.015em;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* Subtle Golden Glow Effects */
+.gold-glow {
+  box-shadow: 0 0 20px -3px rgba(197, 147, 65, 0.25);
+}
+.gold-glow-subtle {
+  box-shadow: 0 4px 16px -2px rgba(197, 147, 65, 0.15);
+}
+.dark .gold-glow {
+  box-shadow: 0 0 24px -2px rgba(232, 197, 129, 0.2);
+}
+
 
 /* Hide scrollbar for clean app experience */
 .no-scrollbar::-webkit-scrollbar {
@@ -132,4 +170,21 @@
   transform-origin: 0% 50%;
   transform-style: preserve-3d;
   will-change: transform, opacity, filter;
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .book-turn-out-next,
+  .book-turn-in-next,
+  .book-turn-out-prev,
+  .book-turn-in-prev {
+    animation: none !important;
+    transform: none !important;
+  }
 }
