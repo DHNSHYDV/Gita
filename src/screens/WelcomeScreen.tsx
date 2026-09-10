@@ -32,7 +32,7 @@ export const WelcomeScreen: React.FC = () => {
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 w-full pt-12 md:pt-14 px-6 flex flex-col items-center text-center"
+        className="relative z-10 w-full pt-[max(4rem,env(safe-area-inset-top,4rem))] px-6 flex flex-col items-center text-center"
       >
         <motion.img
           whileHover={{ scale: 1.05 }}

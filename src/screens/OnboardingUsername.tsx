@@ -17,7 +17,7 @@ export const OnboardingUsername: React.FC = () => {
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] flex flex-col justify-between p-6 select-none transition-colors">
       {/* Top Header */}
       <div>
-        <div className="pt-2">
+        <div className="pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))]">
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => setCurrentScreen('onboarding-language')}

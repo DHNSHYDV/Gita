@@ -37,8 +37,8 @@ export const DevoteeStreaksScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 select-none transition-colors">
-      {/* Top Header */}
-      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 pt-3 pb-2 border-b border-[#EAE2D5] dark:border-[#28221B]">
+      {/* Top Header - Brought 1 cm below top to keep blank safe region */}
+      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))] pb-2 border-b border-[#EAE2D5] dark:border-[#28221B]">
         <div className="flex items-center gap-3">
           <motion.button
             whileTap={{ scale: 0.92 }}

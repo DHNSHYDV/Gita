@@ -28,7 +28,7 @@ export const OnboardingSuccess: React.FC = () => {
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 pt-6 text-center"
+        className="relative z-10 pt-[max(3rem,env(safe-area-inset-top,3rem))] text-center"
       >
         {/* Sacred Golden Lotus Reveal */}
         <div className="relative flex justify-center mb-3 text-[#C59341]">

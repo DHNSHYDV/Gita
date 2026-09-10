@@ -72,8 +72,8 @@ export const MoreScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-24 select-none transition-colors">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 py-3 flex items-center gap-2 border-b border-[#EAE2D5] dark:border-[#28221B]">
+      {/* Header - Brought 1 cm below top to keep blank safe region */}
+      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))] pb-3 flex items-center gap-2 border-b border-[#EAE2D5] dark:border-[#28221B]">
         <motion.button
           whileTap={{ scale: 0.92 }}
           onClick={goBack}

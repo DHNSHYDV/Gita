@@ -107,8 +107,8 @@ export const DailyVerseModal: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent 40% via-[#F5D89F]/30 65% to-[#EBC67F]/85 z-10 pointer-events-none" />
       </div>
 
-      {/* Top Header with Close Button */}
-      <div className="relative z-20 w-full px-5 pt-4 flex items-center justify-between">
+      {/* Top Header with Close Button - Brought 1 cm below top */}
+      <div className="relative z-20 w-full px-5 pt-[max(3rem,env(safe-area-inset-top,3rem))] flex items-center justify-between">
         <div className="w-8 h-8" />
 
         {/* Top-Right X Close Button */}
