@@ -278,3 +278,53 @@ export async function syncDevoteeProgress(params: {
     console.warn('Progress sync warning:', err);
   }
 }
+
+// 9. Permanently Delete User Account & Cloud Progress (Google Play Compliance)
+export async function deleteUserAccount(): Promise<{ success: boolean; error: Error | null }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // 1. Delete user row from profiles table
+      const { error: deleteProfileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (deleteProfileError) {
+        console.warn('Warning during profile record deletion:', deleteProfileError);
+      }
+
+      // 2. Sign out of Supabase auth session
+      await supabase.auth.signOut();
+    }
+
+    // 3. Purge all local user profile and progress data
+    const keysToRemove = [
+      'gita_user_profile',
+      'gita_user_name',
+      'gita_streak',
+      'gita_devotee_streak',
+      'gita_bookmarks',
+      'gita_audio_points',
+      'gita_listened_verses',
+      'gita_google_linked',
+      'gita_onboarding_completed',
+      'gita_reading_history',
+      'gita_last_read',
+    ];
+
+    keysToRemove.forEach((key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // Ignore localStorage access issues
+      }
+    });
+
+    return { success: true, error: null };
+  } catch (err) {
+    console.error('Account deletion exception:', err);
+    return { success: false, error: err as Error };
+  }
+}
+

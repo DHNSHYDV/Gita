@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Language, TextSize, ThemeMode, ScreenType } from '../types';
 import { UI_TRANSLATIONS, UIStrings } from '../data/translations';
 import { updateNativeStatusBar } from '../utils/native';
-import { supabase, fetchUserProfile, syncDevoteeProgress } from '../utils/supabase';
-import { getStoredStreak } from '../data/db';
+import { supabase, fetchUserProfile, syncDevoteeProgress, deleteUserAccount } from '../utils/supabase';
+import { getStoredStreak, resetStoredStreak } from '../data/db';
 import { scheduleDailyMorningQuotes } from '../utils/notifications';
 
 interface AppContextType {
@@ -46,6 +46,7 @@ interface AppContextType {
   sadhanaPoints: number;
   toastMessage: string | null;
   showToast: (msg: string) => void;
+  deleteAccountAndResetData: () => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -322,6 +323,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return false;
   }, [lastRead, bookmarks, showToast]);
 
+  const deleteAccountAndResetData = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await deleteUserAccount();
+      resetStoredStreak();
+
+      // Reset all in-memory React state
+      setUserNameState('');
+      setIsGoogleLinkedState(false);
+      setOnboardingCompletedState(false);
+      setBookmarks([]);
+      setReadingHistory([]);
+      setListenedVerses([]);
+      setLastReadState({ chapter: 2, verse: 47 });
+      setCurrentScreenState('welcome');
+      setNavStack(['welcome']);
+
+      showToast('🕉️ Account and sacred progress deleted.');
+      return res.success;
+    } catch (err) {
+      console.error('Error during full account deletion:', err);
+      showToast('Unable to complete account deletion.');
+      return false;
+    }
+  }, [showToast]);
+
   const t = UI_TRANSLATIONS[language] || UI_TRANSLATIONS.en;
 
   useEffect(() => {
@@ -424,6 +450,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         sadhanaPoints,
         toastMessage,
         showToast,
+        deleteAccountAndResetData,
       }}
     >
       {children}

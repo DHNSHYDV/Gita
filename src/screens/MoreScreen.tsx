@@ -17,8 +17,14 @@ import {
   X,
   Flame,
   LogOut,
-  Heart
+  Heart,
+  ShieldCheck,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
+import { Browser } from '@capacitor/browser';
 import { useApp } from '../context/AppContext';
 import { signOutUser } from '../utils/supabase';
 import { getStoredStreak } from '../data/db';
@@ -40,6 +46,7 @@ export const MoreScreen: React.FC = () => {
     goBack,
     sadhanaPoints,
     listenedVerses,
+    deleteAccountAndResetData,
     t,
   } = useApp();
 
@@ -48,6 +55,9 @@ export const MoreScreen: React.FC = () => {
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showRateModal, setShowRateModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const langNames: Record<string, string> = {
     te: 'Telugu (తెలుగు)',
@@ -333,10 +343,26 @@ export const MoreScreen: React.FC = () => {
             </div>
             <ChevronRight className="w-4 h-4 text-[#B0A595] dark:text-[#6F6455] group-hover:translate-x-0.5 transition-transform" />
           </motion.div>
+
+          {/* Privacy Policy */}
+          <motion.div
+            whileTap={{ scale: 0.99 }}
+            onClick={() => setShowPrivacyModal(true)}
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#F3EBE0] dark:hover:bg-[#25201A] transition-colors group"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="w-5 h-5 text-[#8A7E6C] dark:text-[#9F9382] stroke-[1.75] group-hover:text-[#C59341]" />
+              <span className="text-sm font-medium text-[#2A241E] dark:text-[#FAF7F2]">
+                Privacy Policy
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#B0A595] dark:text-[#6F6455] group-hover:translate-x-0.5 transition-transform" />
+          </motion.div>
         </div>
 
-        {/* Sign Out Card */}
-        <div className="rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] shadow-xs overflow-hidden">
+        {/* Devotional Account & Data Management Card */}
+        <div className="rounded-2xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#2D261E] divide-y divide-[#EAE2D5]/70 dark:divide-[#28221B] shadow-xs overflow-hidden">
+          {/* Sign Out / Switch Account */}
           <motion.button
             whileTap={{ scale: 0.99 }}
             onClick={async () => {
@@ -348,13 +374,33 @@ export const MoreScreen: React.FC = () => {
                 setCurrentScreen('welcome');
               }
             }}
-            className="w-full flex items-center justify-between p-4 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/25 transition-colors group cursor-pointer"
+            className="w-full flex items-center justify-between p-4 text-[#6A5E4E] dark:text-[#B5AA9A] hover:bg-[#F3EBE0] dark:hover:bg-[#25201A] transition-colors group cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <LogOut className="w-5 h-5 stroke-[1.75] group-hover:-translate-x-0.5 transition-transform" />
-              <span className="text-sm font-semibold">
+              <LogOut className="w-5 h-5 stroke-[1.75] group-hover:-translate-x-0.5 transition-transform text-[#8C7E6C] dark:text-[#A89C8B]" />
+              <span className="text-sm font-medium">
                 {isGoogleLinked ? 'Sign Out & Switch Account' : 'Switch Account / Restart Tour'}
               </span>
+            </div>
+            <ChevronRight className="w-4 h-4 opacity-60" />
+          </motion.button>
+
+          {/* Delete Account & Data (Google Play Policy Compliance) */}
+          <motion.button
+            whileTap={{ scale: 0.99 }}
+            onClick={() => setShowDeleteAccountModal(true)}
+            className="w-full flex items-center justify-between p-4 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors group cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <Trash2 className="w-5 h-5 stroke-[1.75] group-hover:scale-110 transition-transform" />
+              <div className="text-left">
+                <span className="text-sm font-medium block">
+                  Delete Account & Data
+                </span>
+                <span className="text-[11px] text-[#9A8D7C] dark:text-[#7A6E5D] block">
+                  Permanently erase cloud profile & spiritual progress
+                </span>
+              </div>
             </div>
             <ChevronRight className="w-4 h-4 opacity-60" />
           </motion.button>
@@ -538,6 +584,207 @@ export const MoreScreen: React.FC = () => {
               >
                 Rate on Google Play Store
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Delete Account Confirmation Modal (Google Play Policy Compliance) */}
+        {showDeleteAccountModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 12 }}
+              transition={{ type: "spring", stiffness: 450, damping: 30 }}
+              className="relative w-full max-w-sm rounded-3xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#382F24] p-6 text-center space-y-4 shadow-2xl"
+            >
+              <button
+                disabled={isDeletingAccount}
+                onClick={() => setShowDeleteAccountModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10"
+              >
+                <X className="w-5 h-5 stroke-[1.75]" />
+              </button>
+
+              <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center shadow-xs">
+                <AlertTriangle className="w-6 h-6 stroke-[1.75]" />
+              </div>
+
+              <h3 className="font-serif text-lg font-bold text-[#2A241E] dark:text-[#FAF7F2]">
+                Delete Account & Progress?
+              </h3>
+
+              <div className="text-xs text-[#5E5242] dark:text-[#C5B9A8] leading-relaxed text-left space-y-2 bg-[#F2ECE1] dark:bg-[#251E17] p-3.5 rounded-2xl border border-[#E4DAC8] dark:border-[#352B20]">
+                <p>
+                  This action will <strong>permanently delete</strong>:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-[#786B5A] dark:text-[#A89C8B]">
+                  <li>Your user profile ({userName || 'Devotee'})</li>
+                  <li>Sadhana streak ({streakInfo.currentStreak} days) & {sadhanaPoints} pts</li>
+                  <li>All saved bookmarks & reading history</li>
+                  <li>Link to your Google account</li>
+                </ul>
+                <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
+                  ⚠️ This action is permanent and cannot be undone.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <button
+                  disabled={isDeletingAccount}
+                  onClick={async () => {
+                    setIsDeletingAccount(true);
+                    await deleteAccountAndResetData();
+                    setIsDeletingAccount(false);
+                    setShowDeleteAccountModal(false);
+                  }}
+                  className="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isDeletingAccount ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Deleting Data...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      <span>Permanently Delete My Account</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  disabled={isDeletingAccount}
+                  onClick={() => setShowDeleteAccountModal(false)}
+                  className="w-full py-2.5 rounded-xl border border-[#DCD3C4] dark:border-[#3A3125] text-xs font-medium text-[#7A6E5D] dark:text-[#AFA495] hover:bg-[#EFE7D8] dark:hover:bg-[#251E17] transition-all cursor-pointer"
+                >
+                  Keep My Account
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Privacy Policy In-App Modal */}
+        {showPrivacyModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 12 }}
+              transition={{ type: "spring", stiffness: 450, damping: 30 }}
+              className="relative w-full max-w-lg max-h-[85vh] rounded-3xl bg-[#FAF7F2] dark:bg-[#1C1813] border border-[#E8E1D5] dark:border-[#382F24] p-6 flex flex-col shadow-2xl text-[#2A241E] dark:text-[#FAF7F2]"
+            >
+              <button
+                onClick={() => setShowPrivacyModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 z-10"
+              >
+                <X className="w-5 h-5 stroke-[1.75]" />
+              </button>
+
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center flex-shrink-0">
+                  <ShieldCheck className="w-5 h-5 stroke-[1.75]" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold">Privacy Policy</h3>
+                  <p className="text-[11px] text-[#8C7F6E] dark:text-[#9F9382]">
+                    Shreemad Bhagavad Gita • Effective Sep 2026
+                  </p>
+                </div>
+              </div>
+
+              {/* Scrollable Policy Text */}
+              <div className="overflow-y-auto pr-1 text-xs text-[#524638] dark:text-[#C5B9A7] leading-relaxed space-y-3.5 my-2 flex-1 border-t border-b border-[#EAE2D5] dark:border-[#2A231A] py-3">
+                <p>
+                  Your privacy and devotion are sacred to us. The <strong>Shreemad Bhagavad Gita</strong> app is crafted with complete transparency and complies strictly with Google Play policies.
+                </p>
+
+                <div>
+                  <h4 className="font-serif font-bold text-xs text-[#2A241E] dark:text-[#FAF7F2] uppercase tracking-wider mb-1">
+                    1. Information We Collect
+                  </h4>
+                  <p>
+                    • <strong>Account Details:</strong> When signing in with Google, we receive your name, email, and avatar to personalize your profile.<br />
+                    • <strong>Spiritual Progress:</strong> Your reading history, bookmarked verses, streaks, and audio chant points are stored securely in our Supabase database.<br />
+                    • <strong>Local Preferences:</strong> Language, audio pace, theme, and daily 6:30 AM reminder preference.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-serif font-bold text-xs text-[#2A241E] dark:text-[#FAF7F2] uppercase tracking-wider mb-1">
+                    2. How We Use Data
+                  </h4>
+                  <p>
+                    • To sync bookmarks and sadhana progress across your devices.<br />
+                    • To deliver the morning wisdom notification at 6:30 AM.<br />
+                    • <strong>Zero Advertising:</strong> We never display commercial ads, track users across apps, or sell your data.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-serif font-bold text-xs text-[#2A241E] dark:text-[#FAF7F2] uppercase tracking-wider mb-1">
+                    3. Account & Data Deletion
+                  </h4>
+                  <p>
+                    You can permanently delete your account and all stored records at any time directly in the app at <strong>More ➔ Delete Account & Data</strong>. You may also email <strong>dhanushyadavkrish@gmail.com</strong> to request deletion. All cloud records are permanently purged upon request.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-serif font-bold text-xs text-[#2A241E] dark:text-[#FAF7F2] uppercase tracking-wider mb-1">
+                    4. Third-Party Services
+                  </h4>
+                  <p>
+                    • Google Identity Services (OAuth)<br />
+                    • Supabase Cloud Database (PostgreSQL with SSL encryption)<br />
+                    • Capgo (Over-the-air web content updates)
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-serif font-bold text-xs text-[#2A241E] dark:text-[#FAF7F2] uppercase tracking-wider mb-1">
+                    5. Contact
+                  </h4>
+                  <p>
+                    Developer: Dhanush Yadav (dhanushyadavkrish@gmail.com)
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between gap-2">
+                <button
+                  onClick={async () => {
+                    const url = 'https://dhnshydv.github.io/Gita/privacy.html';
+                    try {
+                      await Browser.open({ url });
+                    } catch {
+                      window.open(url, '_blank');
+                    }
+                  }}
+                  className="py-2 px-3 rounded-xl border border-[#DCD3C4] dark:border-[#3A3125] text-xs font-medium text-[#7A6E5D] dark:text-[#AFA495] hover:bg-[#EFE7D8] dark:hover:bg-[#251E17] transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open on Web</span>
+                </button>
+
+                <button
+                  onClick={() => setShowPrivacyModal(false)}
+                  className="py-2 px-5 rounded-xl bg-[#2A241E] dark:bg-[#E8C581] text-white dark:text-[#1F1912] text-xs font-semibold shadow-xs active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

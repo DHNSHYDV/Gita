@@ -108,3 +108,13 @@ export const getLeaderboardData = (
     },
   ];
 };
+
+export const resetStoredStreak = (): void => {
+  try {
+    localStorage.removeItem(STORAGE_KEY_STREAK);
+  } catch {
+    // Ignore
+  }
+};
+
+
