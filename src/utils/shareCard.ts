@@ -300,6 +300,7 @@ declare global {
   interface Window {
     NativeShareBridge?: {
       isAvailable: () => boolean;
+      requestStoragePermissions?: () => void;
       shareToWhatsApp: (base64Image: string, filename: string, caption: string) => boolean;
       saveImageToGallery: (base64Image: string, filename: string) => boolean;
     };

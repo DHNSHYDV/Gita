@@ -9,20 +9,21 @@ const APP_PERMISSIONS_PROMPTED_KEY = 'gita_app_permissions_requested_v1';
  * downloads/opens the app, ensuring seamless daily notifications and gallery saving.
  */
 export async function requestAppStartupPermissions(): Promise<void> {
+  // 1. Direct native bridge call on Android (forces native OS dialog)
+  if (typeof window !== 'undefined' && window.NativeShareBridge?.requestStoragePermissions) {
+    try {
+      window.NativeShareBridge.requestStoragePermissions();
+    } catch (err) {
+      console.warn('NativeShareBridge permission trigger error:', err);
+    }
+  }
+
   if (!Capacitor.isNativePlatform()) {
     return;
   }
 
-  // Only prompt on fresh install or first session
-  const alreadyPrompted = localStorage.getItem(APP_PERMISSIONS_PROMPTED_KEY);
-  if (alreadyPrompted) {
-    return;
-  }
-
-  localStorage.setItem(APP_PERMISSIONS_PROMPTED_KEY, 'true');
-
   try {
-    // 1. Request Notification Permissions (for daily sacred morning shloka)
+    // 2. Request Notification Permissions (for daily sacred morning shloka)
     const notifStatus = await LocalNotifications.checkPermissions();
     if (notifStatus.display !== 'granted') {
       await LocalNotifications.requestPermissions();
@@ -32,7 +33,7 @@ export async function requestAppStartupPermissions(): Promise<void> {
   }
 
   try {
-    // 2. Request Filesystem / Storage Permissions (for saving sacred status cards)
+    // 3. Request Filesystem / Storage Permissions (for saving sacred status cards)
     const fsStatus = await Filesystem.checkPermissions();
     if (fsStatus.publicStorage !== 'granted') {
       await Filesystem.requestPermissions();
