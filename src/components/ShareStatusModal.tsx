@@ -35,12 +35,14 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setCopied(false);
       setIsGenerating(false);
       setIsDownloading(false);
+      setShareMessage(null);
     }
   }, [isOpen]);
 
@@ -48,11 +50,12 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
 
   const handleShare = async () => {
     setIsGenerating(true);
+    setShareMessage(null);
     try {
       const res = await shareToStatusOrStory(data, isDarkCard);
-      if (res.method === 'fallback') {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2500);
+      if (res.method === 'downloaded') {
+        setShareMessage('Card image saved to your photos! 📸 Caption copied. Pick it in WhatsApp Status.');
+        setTimeout(() => setShareMessage(null), 6000);
       }
     } finally {
       setIsGenerating(false);
@@ -63,6 +66,8 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
     setIsDownloading(true);
     try {
       await downloadVerseCardImage(data, isDarkCard);
+      setShareMessage('Sacred card saved to downloads! 🕉️');
+      setTimeout(() => setShareMessage(null), 3500);
     } catch (err) {
       console.warn('Download error:', err);
     } finally {
@@ -197,6 +202,17 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
 
           {/* Action Buttons */}
           <div className="space-y-2 pt-2 border-t border-[#EAE1D3] dark:border-[#2D251C]">
+            {/* Status Feedback Banner */}
+            {shareMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs text-center font-medium shadow-xs"
+              >
+                {shareMessage}
+              </motion.div>
+            )}
+
             {/* Primary: Share to WhatsApp Status / Stories */}
             <motion.button
               whileTap={{ scale: 0.98 }}

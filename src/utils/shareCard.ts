@@ -1,3 +1,6 @@
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Language } from '../types';
 
 export interface VerseShareData {
@@ -59,12 +62,12 @@ function getFontFamily(lang: Language): string {
 }
 
 /**
- * Generates a high-resolution 1080 x 1920 (9:16 vertical story format) card.
+ * Generates a high-resolution 1080 x 1920 (9:16 vertical story format) card canvas.
  */
-export async function generateVerseCardBlob(
+export function generateVerseCardCanvas(
   data: VerseShareData,
   isDark: boolean = false
-): Promise<Blob> {
+): HTMLCanvasElement {
   const width = 1080;
   const height = 1920;
 
@@ -244,12 +247,35 @@ export async function generateVerseCardBlob(
   ctx.fillStyle = isDark ? '#F5E6CC' : '#A27222';
   ctx.fillText(`👉 Download Free: ${DUMMY_DOWNLOAD_LINK}`, width / 2, bottomBoxY + 118);
 
+  // Return canvas element directly
+  return canvas;
+}
+
+/**
+ * Convert canvas to Blob
+ */
+export async function generateVerseCardBlob(
+  data: VerseShareData,
+  isDark: boolean = false
+): Promise<Blob> {
+  const canvas = generateVerseCardCanvas(data, isDark);
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error('Failed to generate image blob from canvas'));
     }, 'image/png', 0.95);
   });
+}
+
+/**
+ * Convert canvas to Data URL for direct image preview / base64 storage
+ */
+export function generateVerseCardDataUrl(
+  data: VerseShareData,
+  isDark: boolean = false
+): string {
+  const canvas = generateVerseCardCanvas(data, isDark);
+  return canvas.toDataURL('image/png', 0.95);
 }
 
 /**
@@ -271,22 +297,52 @@ export function formatStatusCaption(data: VerseShareData): string {
 }
 
 /**
- * Native Share handler that sends the generated card image + caption link to WhatsApp Status/Story.
+ * Native & Universal Share handler that guarantees sharing as an IMAGE CARD (never text-only).
  */
 export async function shareToStatusOrStory(
   data: VerseShareData,
   isDark: boolean = false
-): Promise<{ success: boolean; method: 'files' | 'text' | 'fallback' }> {
+): Promise<{ success: boolean; method: 'native' | 'web-files' | 'downloaded' }> {
   const caption = formatStatusCaption(data);
   const title = `Bhagavad Gita ${data.chapter}.${data.verse}`;
+  const filename = `gita_verse_${data.chapter}_${data.verse}.png`;
 
+  // 1. Try Native Capacitor Share (Attaches actual image file to WhatsApp Status / Story sheet)
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const dataUrl = generateVerseCardDataUrl(data, isDark);
+      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+
+      const savedFile = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache,
+      });
+
+      if (savedFile && savedFile.uri) {
+        await Share.share({
+          title,
+          text: caption,
+          files: [savedFile.uri],
+          dialogTitle: 'Share to WhatsApp Status & Story',
+        });
+        return { success: true, method: 'native' };
+      }
+    } catch (nativeErr: unknown) {
+      if ((nativeErr as Error)?.name === 'AbortError' || (nativeErr as Error)?.message?.toLowerCase().includes('cancel')) {
+        return { success: true, method: 'native' };
+      }
+      console.warn('Native Share unavailable, attempting web/download fallback:', nativeErr);
+    }
+  }
+
+  // 2. Try Web Share API Level 2 (files support in modern mobile browsers)
   try {
     const blob = await generateVerseCardBlob(data, isDark);
-    const filename = `gita-bg-${data.chapter}-${data.verse}.png`;
     const file = new File([blob], filename, { type: 'image/png' });
 
-    // Check if navigator.canShare supports files
     if (
+      typeof navigator !== 'undefined' &&
       navigator.canShare &&
       navigator.canShare({ files: [file] }) &&
       navigator.share
@@ -296,36 +352,36 @@ export async function shareToStatusOrStory(
         text: caption,
         files: [file],
       });
-      return { success: true, method: 'files' };
+      return { success: true, method: 'web-files' };
     }
-
-    // Fallback 1: Share text with link if files not supported
-    if (navigator.share) {
-      await navigator.share({
-        title,
-        text: caption,
-      });
-      return { success: true, method: 'text' };
+  } catch (webErr: unknown) {
+    if ((webErr as Error)?.name === 'AbortError') {
+      return { success: true, method: 'web-files' };
     }
-  } catch (err: unknown) {
-    // If user cancelled the share sheet, don't treat as error
-    if ((err as Error)?.name === 'AbortError') {
-      return { success: true, method: 'files' };
-    }
-    console.warn('Share API error, falling back:', err);
+    console.warn('Web file share unavailable:', webErr);
   }
 
-  // Fallback 2: Copy to clipboard
+  // 3. Fallback: Auto-download the high-res card to phone gallery & copy caption
+  // WE NEVER FALL BACK TO SHARING PLAIN TEXT! The user expects an image!
   try {
-    await navigator.clipboard.writeText(caption);
-    return { success: true, method: 'fallback' };
-  } catch {
-    return { success: false, method: 'fallback' };
+    await downloadVerseCardImage(data, isDark);
+  } catch (dlErr) {
+    console.warn('Auto download error:', dlErr);
   }
+
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(caption);
+    }
+  } catch {
+    // Ignore clipboard errors
+  }
+
+  return { success: true, method: 'downloaded' };
 }
 
 /**
- * Direct download of the card image.
+ * Direct download / save of the card image.
  */
 export async function downloadVerseCardImage(
   data: VerseShareData,
