@@ -296,18 +296,42 @@ export function formatStatusCaption(data: VerseShareData): string {
   );
 }
 
+declare global {
+  interface Window {
+    NativeShareBridge?: {
+      isAvailable: () => boolean;
+      shareToWhatsApp: (base64Image: string, filename: string, caption: string) => boolean;
+      saveImageToGallery: (base64Image: string, filename: string) => boolean;
+    };
+  }
+}
+
 /**
  * Native & Universal Share handler that guarantees sharing as an IMAGE CARD (never text-only).
  */
 export async function shareToStatusOrStory(
   data: VerseShareData,
   isDark: boolean = false
-): Promise<{ success: boolean; method: 'native' | 'web-files' | 'downloaded' }> {
+): Promise<{ success: boolean; method: 'whatsapp-direct' | 'native' | 'web-files' | 'downloaded' }> {
   const caption = formatStatusCaption(data);
   const title = `Bhagavad Gita ${data.chapter}.${data.verse}`;
   const filename = `gita_verse_${data.chapter}_${data.verse}.png`;
 
-  // 1. Try Native Capacitor Share (Attaches actual image file to WhatsApp Status / Story sheet)
+  // 1. Direct WhatsApp Status via NativeBridge (Opens WhatsApp immediately with the image attached!)
+  if (typeof window !== 'undefined' && window.NativeShareBridge?.isAvailable?.()) {
+    try {
+      const dataUrl = generateVerseCardDataUrl(data, isDark);
+      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+      const ok = window.NativeShareBridge.shareToWhatsApp(base64Data, filename, caption);
+      if (ok) {
+        return { success: true, method: 'whatsapp-direct' };
+      }
+    } catch (bridgeErr) {
+      console.warn('NativeShareBridge WhatsApp error:', bridgeErr);
+    }
+  }
+
+  // 2. Try Native Capacitor Share (Attaches actual image file to Android Share sheet)
   if (Capacitor.isNativePlatform()) {
     try {
       const dataUrl = generateVerseCardDataUrl(data, isDark);
@@ -381,17 +405,34 @@ export async function shareToStatusOrStory(
 }
 
 /**
- * Direct download / save of the card image.
+ * Direct download / save of the card image directly to Gallery / Photos.
  */
 export async function downloadVerseCardImage(
   data: VerseShareData,
   isDark: boolean = false
 ): Promise<void> {
+  const filename = `Bhagavad-Gita-${data.chapter}.${data.verse}.png`;
+
+  // Try direct native MediaStore save to Photos/Gallery (Pictures/Gita)
+  if (typeof window !== 'undefined' && window.NativeShareBridge?.isAvailable?.()) {
+    try {
+      const dataUrl = generateVerseCardDataUrl(data, isDark);
+      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+      const saved = window.NativeShareBridge.saveImageToGallery(base64Data, filename);
+      if (saved) {
+        return;
+      }
+    } catch (err) {
+      console.warn('Native gallery save fallback to blob download:', err);
+    }
+  }
+
+  // Web / PWA fallback download
   const blob = await generateVerseCardBlob(data, isDark);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Bhagavad-Gita-${data.chapter}.${data.verse}.png`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

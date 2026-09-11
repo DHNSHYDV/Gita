@@ -1,12 +1,26 @@
 package com.gita.wisdom;
 
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.View;
+import android.webkit.JavascriptInterface;
+import androidx.core.content.FileProvider;
 import androidx.core.view.ViewCompat;
 import com.getcapacitor.BridgeActivity;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -15,6 +29,7 @@ public class MainActivity extends BridgeActivity {
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
             getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);
+            getBridge().getWebView().addJavascriptInterface(new NativeShareBridge(this), "NativeShareBridge");
         }
         applySystemBarsTheme();
     }
@@ -62,6 +77,114 @@ public class MainActivity extends BridgeActivity {
                 }
             }
             decorView.setSystemUiVisibility(flags);
+        }
+    }
+
+    public static class NativeShareBridge {
+        private final Activity activity;
+
+        public NativeShareBridge(Activity activity) {
+            this.activity = activity;
+        }
+
+        @JavascriptInterface
+        public boolean isAvailable() {
+            return true;
+        }
+
+        @JavascriptInterface
+        public boolean shareToWhatsApp(String base64Image, String filename, String caption) {
+            try {
+                byte[] bytes = Base64.decode(base64Image, Base64.DEFAULT);
+                File cachePath = new File(activity.getCacheDir(), "images");
+                if (!cachePath.exists()) {
+                    cachePath.mkdirs();
+                }
+                File imageFile = new File(cachePath, filename);
+                FileOutputStream fos = new FileOutputStream(imageFile);
+                fos.write(bytes);
+                fos.flush();
+                fos.close();
+
+                Uri contentUri = FileProvider.getUriForFile(
+                    activity,
+                    activity.getPackageName() + ".fileprovider",
+                    imageFile
+                );
+
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("image/png");
+                intent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                if (caption != null && !caption.isEmpty()) {
+                    intent.putExtra(Intent.EXTRA_TEXT, caption);
+                }
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                PackageManager pm = activity.getPackageManager();
+                boolean hasWhatsApp = isAppInstalled("com.whatsapp", pm);
+                boolean hasW4B = isAppInstalled("com.whatsapp.w4b", pm);
+
+                if (hasWhatsApp) {
+                    intent.setPackage("com.whatsapp");
+                } else if (hasW4B) {
+                    intent.setPackage("com.whatsapp.w4b");
+                } else {
+                    Intent chooser = Intent.createChooser(intent, "Share Sacred Status Card");
+                    activity.startActivity(chooser);
+                    return true;
+                }
+
+                activity.startActivity(intent);
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean saveImageToGallery(String base64Image, String filename) {
+            try {
+                byte[] bytes = Base64.decode(base64Image, Base64.DEFAULT);
+                ContentResolver resolver = activity.getContentResolver();
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DISPLAY_NAME, filename);
+                values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Gita");
+                    values.put(MediaStore.Images.Media.IS_PENDING, 1);
+                }
+
+                Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                if (uri != null) {
+                    OutputStream out = resolver.openOutputStream(uri);
+                    if (out != null) {
+                        out.write(bytes);
+                        out.flush();
+                        out.close();
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        values.clear();
+                        values.put(MediaStore.Images.Media.IS_PENDING, 0);
+                        resolver.update(uri, values, null, null);
+                    }
+                    return true;
+                }
+                return false;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        private boolean isAppInstalled(String packageName, PackageManager pm) {
+            try {
+                pm.getPackageInfo(packageName, 0);
+                return true;
+            } catch (PackageManager.NameNotFoundException e) {
+                return false;
+            }
         }
     }
 }

@@ -53,7 +53,10 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
     setShareMessage(null);
     try {
       const res = await shareToStatusOrStory(data, isDarkCard);
-      if (res.method === 'downloaded') {
+      if (res.method === 'whatsapp-direct') {
+        setShareMessage('Opening WhatsApp! 🟢 Tap "My Status" and click the green arrow to post.');
+        setTimeout(() => setShareMessage(null), 6000);
+      } else if (res.method === 'downloaded') {
         setShareMessage('Card image saved to your photos! 📸 Caption copied. Pick it in WhatsApp Status.');
         setTimeout(() => setShareMessage(null), 6000);
       }
@@ -66,7 +69,7 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
     setIsDownloading(true);
     try {
       await downloadVerseCardImage(data, isDarkCard);
-      setShareMessage('Sacred card saved to downloads! 🕉️');
+      setShareMessage('Sacred card saved to Photos / Gallery! 🕉️');
       setTimeout(() => setShareMessage(null), 3500);
     } catch (err) {
       console.warn('Download error:', err);
@@ -213,22 +216,27 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
               </motion.div>
             )}
 
-            {/* Primary: Share to WhatsApp Status / Stories */}
+            {/* Primary: Share to WhatsApp Status */}
             <motion.button
               whileTap={{ scale: 0.98 }}
               disabled={isGenerating}
               onClick={handleShare}
-              className="w-full py-3 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#25D366]/20 transition-all cursor-pointer"
+              className="w-full py-3 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-xs flex flex-col items-center justify-center shadow-md shadow-[#25D366]/20 transition-all cursor-pointer"
             >
               {isGenerating ? (
-                <>
+                <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Creating Sacred Card...</span>
-                </>
+                  <span>Preparing Sacred Card...</span>
+                </div>
               ) : (
                 <>
-                  <Share2 className="w-4 h-4 stroke-[2.2]" />
-                  <span>Share to WhatsApp Status / Story</span>
+                  <div className="flex items-center gap-2">
+                    <Share2 className="w-4 h-4 stroke-[2.2]" />
+                    <span className="text-sm font-bold">Share to WhatsApp Status</span>
+                  </div>
+                  <span className="text-[10px] text-white/90 font-normal mt-0.5">
+                    Opens WhatsApp • Select "My Status" & tap green arrow
+                  </span>
                 </>
               )}
             </motion.button>

@@ -18,6 +18,7 @@ import { DailyVerseModal } from './screens/DailyVerseModal';
 import { UpdateModal } from './components/UpdateModal';
 import { registerHardwareBackListener } from './utils/native';
 import { registerNotificationClickListener } from './utils/notifications';
+import { requestAppStartupPermissions } from './utils/permissions';
 import { App as CapApp } from '@capacitor/app';
 import { handleAuthCallback, fetchUserProfile } from './utils/supabase';
 
@@ -59,6 +60,11 @@ export const AppContent: React.FC = () => {
     toastMessage,
     showToast,
   } = useApp();
+
+  // Request Notifications & File Access on App Launch
+  useEffect(() => {
+    requestAppStartupPermissions();
+  }, []);
 
   // Register Android Hardware Back Button & Edge Swipe Gesture Listener
   useEffect(() => {
