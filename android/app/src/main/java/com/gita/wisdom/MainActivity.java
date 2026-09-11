@@ -121,6 +121,12 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
+        public boolean isWhatsAppInstalled() {
+            PackageManager pm = activity.getPackageManager();
+            return isAppInstalled("com.whatsapp", pm) || isAppInstalled("com.whatsapp.w4b", pm);
+        }
+
+        @JavascriptInterface
         public void requestStoragePermissions() {
             activity.runOnUiThread(() -> {
                 if (activity instanceof MainActivity) {

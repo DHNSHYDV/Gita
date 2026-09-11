@@ -153,9 +153,10 @@ export const DailyVerseModal: React.FC = () => {
         data={{
           chapter: currentRef.chapter,
           verse: currentRef.verse,
-          sanskrit: translationData.scriptShloka || verseData.sanskrit,
+          sanskrit: verseData.sanskrit,
+          regionalScriptShloka: translationData.scriptShloka,
           transliteration: verseData.transliteration,
-          translation: translationData.translation,
+          bhavartham: translationData.translation,
           language,
         }}
       />

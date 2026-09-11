@@ -546,9 +546,10 @@ export const ShlokaScreen: React.FC = () => {
             data={{
               chapter: selectedChapter,
               verse: selectedVerse,
-              sanskrit: tData.scriptShloka || vData.sanskrit,
+              sanskrit: vData.sanskrit,
+              regionalScriptShloka: tData.scriptShloka,
               transliteration: vData.transliteration,
-              translation: tData.translation,
+              bhavartham: tData.translation,
               language,
             }}
           />
