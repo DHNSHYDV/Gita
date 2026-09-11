@@ -19,6 +19,7 @@ import { audioPlayer } from '../utils/audio';
 import { recordReadingForStreak } from '../data/db';
 import { syncDevoteeProgress } from '../utils/supabase';
 import { Language, TextSize } from '../types';
+import { ShareStatusModal } from '../components/ShareStatusModal';
 
 interface VerseCardProps {
   chapterNumber: number;
@@ -314,6 +315,7 @@ export const ShlokaScreen: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [turnDirection, setTurnDirection] = useState<'next' | 'prev'>('next');
   const [bookmarkToast, setBookmarkToast] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState<boolean>(false);
 
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
@@ -408,26 +410,9 @@ export const ShlokaScreen: React.FC = () => {
     }, 1600);
   };
 
-  // Share verse
-  const handleShare = async () => {
-    const verseData = getVerse(selectedChapter, selectedVerse);
-    const translationData = verseData.translations[language] || verseData.translations.en;
-    const shareText = `🕉️ Bhagavad Gita ${selectedChapter}.${selectedVerse}\n\n${translationData.scriptShloka}\n\n"${translationData.translation}"\n\nRead more on Gita App: https://github.com/DHNSHYDV/Gita`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Bhagavad Gita ${selectedChapter}.${selectedVerse}`,
-          text: shareText,
-        });
-      } catch {
-        // Share cancelled
-      }
-    } else {
-      navigator.clipboard.writeText(shareText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  // Share verse via Sacred WhatsApp Status & Story Card
+  const handleShare = () => {
+    setShareModalOpen(true);
   };
 
   const handleCycleTextSize = () => {
@@ -549,6 +534,26 @@ export const ShlokaScreen: React.FC = () => {
           <span>{bookmarkToast}</span>
         </motion.div>
       )}
+
+      {/* Sacred WhatsApp Status & Story Card Modal */}
+      {(() => {
+        const vData = getVerse(selectedChapter, selectedVerse);
+        const tData = vData.translations[language] || vData.translations.en;
+        return (
+          <ShareStatusModal
+            isOpen={shareModalOpen}
+            onClose={() => setShareModalOpen(false)}
+            data={{
+              chapter: selectedChapter,
+              verse: selectedVerse,
+              sanskrit: tData.scriptShloka || vData.sanskrit,
+              transliteration: vData.transliteration,
+              translation: tData.translation,
+              language,
+            }}
+          />
+        );
+      })()}
 
       {/* Floating Bottom Navigation */}
       <footer className="fixed bottom-0 left-0 right-0 max-w-md md:max-w-xl mx-auto bg-[#FAF7F2]/95 dark:bg-[#181512]/95 backdrop-blur-md border-t border-[#EAE2D5] dark:border-[#28221B] px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] z-30 flex items-center justify-between shadow-lg">
