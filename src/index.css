@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
+    -webkit-overscroll-behavior: none !important;
+  }
+
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -10,6 +16,14 @@
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  *:focus, *:focus-visible {
+    outline: none !important;
   }
 
   /* Regional Script Safe Line-Height & Rendering */

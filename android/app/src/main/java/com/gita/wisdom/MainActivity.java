@@ -14,6 +14,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
+            getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);
         }
         applySystemBarsTheme();
     }
@@ -24,6 +25,7 @@ public class MainActivity extends BridgeActivity {
         applySystemBarsTheme();
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
+            getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);
             ViewCompat.requestApplyInsets(getBridge().getWebView());
         }
     }
