@@ -55,9 +55,17 @@ export const getStoredStreak = (): UserStreakInfo => {
   return defaultStreak;
 };
 
+export const getLocalDateString = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const recordReadingForStreak = (): UserStreakInfo => {
   const current = getStoredStreak();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
 
   if (current.lastReadDate === todayStr) {
     // Already read today, increment total count
@@ -68,9 +76,11 @@ export const recordReadingForStreak = (): UserStreakInfo => {
       current.currentStreak = 1;
       current.longestStreak = 1;
     } else {
-      const lastDate = new Date(current.lastReadDate);
-      const today = new Date(todayStr);
-      const diffDays = Math.round((today.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
+      const [lastY, lastM, lastD] = current.lastReadDate.split('-').map(Number);
+      const [todayY, todayM, todayD] = todayStr.split('-').map(Number);
+      const lastDateUtc = Date.UTC(lastY, lastM - 1, lastD);
+      const todayDateUtc = Date.UTC(todayY, todayM - 1, todayD);
+      const diffDays = Math.round((todayDateUtc - lastDateUtc) / (1000 * 3600 * 24));
 
       if (diffDays === 1) {
         current.currentStreak += 1;

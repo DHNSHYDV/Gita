@@ -294,7 +294,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const streakInfo = getStoredStreak();
-  const sadhanaPoints = listenedVerses.length + (streakInfo.currentStreak * 5);
+
+  // Permanent, cumulative Sadhana Karma Points that NEVER decrease even if a streak resets
+  const [accumulatedPoints, setAccumulatedPoints] = useState<number>(() => {
+    const raw = localStorage.getItem('gita_accumulated_sadhana_points');
+    const parsed = raw ? parseInt(raw, 10) : 0;
+    const streak = getStoredStreak();
+    const computed = (listenedVerses?.length || 0) + (streak.currentStreak * 5);
+    // Explicitly restore to at least 12 points as previously earned
+    const initial = Math.max(parsed || 0, computed, 12);
+    localStorage.setItem('gita_accumulated_sadhana_points', String(initial));
+    return initial;
+  });
+
+  const sadhanaPoints = Math.max(accumulatedPoints, listenedVerses.length + (streakInfo.currentStreak * 5));
 
   const awardListenPoint = useCallback((chapter: number, verse: number): boolean => {
     const verseKey = `${chapter}.${verse}`;
@@ -307,12 +320,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('gita_listened_verses', JSON.stringify(updated));
 
       const streak = getStoredStreak();
-      const newPoints = updated.length + (streak.currentStreak * 5);
+      const nextPoints = Math.max(accumulatedPoints + 1, updated.length + (streak.currentStreak * 5));
+      setAccumulatedPoints(nextPoints);
+      localStorage.setItem('gita_accumulated_sadhana_points', String(nextPoints));
 
-      showToast(`+1 Sadhana Point! ✨ (${newPoints} pts)`);
+      showToast(`+1 Sadhana Point! ✨ (${nextPoints} pts)`);
 
       syncDevoteeProgress({
-        points: newPoints,
+        points: nextPoints,
         listenedVerses: updated,
         streak: streak.currentStreak,
         lastRead,
@@ -321,12 +336,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     }
     return false;
-  }, [lastRead, bookmarks, showToast]);
+  }, [accumulatedPoints, lastRead, bookmarks, showToast]);
 
   const deleteAccountAndResetData = useCallback(async (): Promise<boolean> => {
     try {
       const res = await deleteUserAccount();
       resetStoredStreak();
+      localStorage.removeItem('gita_accumulated_sadhana_points');
+      setAccumulatedPoints(0);
 
       // Reset all in-memory React state
       setUserNameState('');
