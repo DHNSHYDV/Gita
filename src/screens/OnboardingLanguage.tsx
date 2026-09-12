@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ArrowRight, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Language } from '../types';
+import { DURATIONS, EASING } from '../utils/motion';
 
 export const OnboardingLanguage: React.FC = () => {
   const { language, setLanguage, setCurrentScreen } = useApp();
@@ -63,7 +64,11 @@ export const OnboardingLanguage: React.FC = () => {
                 key={item.code}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.04 }}
+                transition={{
+                  delay: idx * 0.04,
+                  duration: DURATIONS.normal,
+                  ease: EASING.emphasized,
+                }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => setLanguage(item.code)}
                 className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#F3EBE0] dark:hover:bg-[#25201A] transition-colors"

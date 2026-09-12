@@ -21,6 +21,7 @@ import { registerNotificationClickListener } from './utils/notifications';
 import { requestAppStartupPermissions } from './utils/permissions';
 import { App as CapApp } from '@capacitor/app';
 import { handleAuthCallback, fetchUserProfile } from './utils/supabase';
+import { LaunchOrchestrator } from './components/LaunchOrchestrator';
 
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
@@ -186,5 +187,9 @@ export const AppContent: React.FC = () => {
 };
 
 export default function App() {
-  return <AppContent />;
+  return (
+    <LaunchOrchestrator>
+      <AppContent />
+    </LaunchOrchestrator>
+  );
 }

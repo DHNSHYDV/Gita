@@ -6,6 +6,12 @@ import { getStoredStreak } from '../data/db';
 
 import { motion } from 'framer-motion';
 import { SearchOverlay } from '../components/SearchOverlay';
+import {
+  staggerContainer,
+  fadeInUp,
+  heroCardEntrance,
+  fadeIn,
+} from '../utils/motion';
 
 export const HomeScreen: React.FC = () => {
   const {
@@ -94,21 +100,32 @@ export const HomeScreen: React.FC = () => {
       {/* Comprehensive Search Overlay for Chapters, Shlokas & Topics */}
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
-      <main className="px-5 pt-4 space-y-5">
-        {/* Daily Quote Card (Serene, warm parchment card with gold accents) */}
+      <motion.main
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="px-5 pt-4 space-y-5"
+      >
+        {/* Daily Quote Hero Card (Serene, warm parchment card with gold accents) */}
         <motion.div
+          variants={heroCardEntrance}
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => setDailyVerseModalOpen(true)}
           className="relative overflow-hidden rounded-3xl cursor-pointer p-6 bg-gradient-to-br from-[#FDF8EE] via-[#F7EDDC] to-[#EEDAB8] dark:from-[#261E14] dark:via-[#20180F] dark:to-[#17110A] border border-[#E5D2B1] dark:border-[#3D3021] shadow-sm hover:shadow-md transition-shadow group"
         >
           {/* Subtle decorative sacred sun watermark */}
-          <div className="absolute -right-6 -bottom-6 w-36 h-36 opacity-15 pointer-events-none text-[#9E6F22] dark:text-[#C59341]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 0.15, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="absolute -right-6 -bottom-6 w-36 h-36 pointer-events-none text-[#9E6F22] dark:text-[#C59341]"
+          >
             <svg viewBox="0 0 100 100" fill="currentColor">
               <circle cx="50" cy="50" r="30" />
               <path d="M50 0 L55 30 L85 15 L65 40 L95 50 L65 60 L85 85 L55 70 L50 100 L45 70 L15 85 L35 60 L5 50 L35 40 L15 15 L45 30 Z" />
             </svg>
-          </div>
+          </motion.div>
 
           <div className="relative z-10 flex flex-col items-center text-center">
             <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-[#8C601E] dark:text-[#DDB876] mb-2.5">
@@ -127,7 +144,7 @@ export const HomeScreen: React.FC = () => {
         </motion.div>
 
         {/* Continue Reading Card */}
-        <div>
+        <motion.div variants={fadeInUp}>
           <h2 className="text-xs font-semibold uppercase tracking-wider text-[#7E7363] dark:text-[#9F9484] mb-2 px-1">
             {t.continueReading}
           </h2>
@@ -150,10 +167,10 @@ export const HomeScreen: React.FC = () => {
               <ChevronRight className="w-4 h-4" strokeWidth={2} />
             </div>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Quick Access Row */}
-        <div>
+        <motion.div variants={fadeInUp}>
           <div className="grid grid-cols-4 gap-2.5">
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -213,10 +230,10 @@ export const HomeScreen: React.FC = () => {
               </span>
             </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* All Chapters Section Header */}
-        <div>
+        <motion.div variants={fadeInUp}>
           <div className="flex items-center justify-between mb-3 px-1">
             <h2 className="text-base font-bold font-serif text-[#2A231A] dark:text-[#F3E6D0]">
               {t.allChapters}
@@ -258,8 +275,8 @@ export const HomeScreen: React.FC = () => {
               </motion.div>
             ))}
           </div>
-        </div>
-      </main>
+        </motion.div>
+      </motion.main>
     </div>
   );
 };

@@ -68,9 +68,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return localStorage.getItem('gita_onboarding_completed') === 'true';
   });
 
-  // Start on welcome
-  const [currentScreen, setCurrentScreenState] = useState<ScreenType>('welcome');
-  const [navStack, setNavStack] = useState<ScreenType[]>(['welcome']);
+  // Start on home for returning users, welcome for first-time users
+  const [currentScreen, setCurrentScreenState] = useState<ScreenType>(() => {
+    return localStorage.getItem('gita_onboarding_completed') === 'true' ? 'home' : 'welcome';
+  });
+  const [navStack, setNavStack] = useState<ScreenType[]>(() => {
+    return localStorage.getItem('gita_onboarding_completed') === 'true' ? ['home'] : ['welcome'];
+  });
   const [openSettingsFromScreen, setOpenSettingsFromScreen] = useState<ScreenType | null>(null);
   const [screenDirection, setScreenDirection] = useState<number>(1);
 
