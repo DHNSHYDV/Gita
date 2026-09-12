@@ -305,7 +305,11 @@ export const ShlokaScreen: React.FC = () => {
     isBookmarked,
     toggleBookmark,
     setLastRead,
+    lastRead,
+    isDailyVerseView,
+    setIsDailyVerseView,
     awardListenPoint,
+    showToast,
     t,
   } = useApp();
 
@@ -323,16 +327,31 @@ export const ShlokaScreen: React.FC = () => {
   const currentChapterData = CHAPTERS_DATA.find((c) => c.number === selectedChapter) || CHAPTERS_DATA[1];
   const totalVersesInChapter = currentChapterData.versesCount;
 
-  // Sync reading position to streak and last-read, and stop previous audio
+  // Sync reading position to streak and last-read (only if not previewing daily verse), and stop previous audio
   useEffect(() => {
-    setLastRead({ chapter: selectedChapter, verse: selectedVerse });
-    const streak = recordReadingForStreak();
-    syncDevoteeProgress({
-      streak: streak.currentStreak,
-      lastRead: { chapter: selectedChapter, verse: selectedVerse }
-    });
+    if (!isDailyVerseView) {
+      setLastRead({ chapter: selectedChapter, verse: selectedVerse });
+      const streak = recordReadingForStreak();
+      syncDevoteeProgress({
+        streak: streak.currentStreak,
+        lastRead: { chapter: selectedChapter, verse: selectedVerse }
+      });
+    } else {
+      const streak = recordReadingForStreak();
+      syncDevoteeProgress({
+        streak: streak.currentStreak,
+        lastRead
+      });
+    }
     audioPlayer.stop();
-  }, [selectedChapter, selectedVerse]);
+  }, [selectedChapter, selectedVerse, isDailyVerseView]);
+
+  // Clean up daily verse view mode when leaving ShlokaScreen
+  useEffect(() => {
+    return () => {
+      setIsDailyVerseView(false);
+    };
+  }, [setIsDailyVerseView]);
 
   // Handle audio state
   useEffect(() => {
@@ -421,6 +440,11 @@ export const ShlokaScreen: React.FC = () => {
     else setTextSize('sm');
   };
 
+  const handleBack = () => {
+    setIsDailyVerseView(false);
+    goBack();
+  };
+
   const currentVerseId = `${selectedChapter}.${selectedVerse}`;
   const bookmarked = isBookmarked(currentVerseId);
 
@@ -433,7 +457,7 @@ export const ShlokaScreen: React.FC = () => {
       {/* Top Header - Brought 1 cm below top to keep blank safe region */}
       <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))] pb-3 flex items-center justify-between border-b border-[#EAE2D5] dark:border-[#28221B]">
         <button
-          onClick={goBack}
+          onClick={handleBack}
           className="p-2 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors active:scale-95"
           title="Back"
         >
@@ -441,9 +465,15 @@ export const ShlokaScreen: React.FC = () => {
         </button>
 
         <div className="text-center flex-1 mx-2">
-          <p className="text-xs font-medium text-[#8A7E6C] dark:text-[#A89D8C] tracking-wide uppercase">
-            {t.chapterLabel} {selectedChapter}
-          </p>
+          {isDailyVerseView ? (
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#C59341]/15 text-[#9E6F22] dark:text-[#E8C581] text-[10px] font-bold tracking-wide uppercase">
+              <span>Today's Shloka • In Context</span>
+            </div>
+          ) : (
+            <p className="text-xs font-medium text-[#8A7E6C] dark:text-[#A89D8C] tracking-wide uppercase">
+              {t.chapterLabel} {selectedChapter}
+            </p>
+          )}
           <h1 className="font-serif font-bold text-sm md:text-base text-[#2A241E] dark:text-[#FAF7F2] truncate">
             {currentChapterData.title[language]}
           </h1>
@@ -463,6 +493,28 @@ export const ShlokaScreen: React.FC = () => {
 
       {/* Main Reading Page */}
       <main className="px-5 py-4 max-w-md md:max-w-xl mx-auto space-y-4">
+        {/* Daily Verse Context Notice */}
+        {isDailyVerseView && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-2xl bg-[#FAF1E3] dark:bg-[#251E16] border border-[#EBD7BE] dark:border-[#3D3122] text-xs shadow-2xs"
+          >
+            <span className="text-[#8C6422] dark:text-[#E8C581] font-medium text-[11px] leading-tight">
+              Reading Today's Shloka • Your Continue Reading bookmark is preserved
+            </span>
+            <button
+              onClick={() => {
+                setLastRead({ chapter: selectedChapter, verse: selectedVerse });
+                setIsDailyVerseView(false);
+                showToast('Saved as your Continue Reading bookmark');
+              }}
+              className="px-2.5 py-1 shrink-0 rounded-lg bg-[#8C6422] text-white dark:bg-[#E8C581] dark:text-[#231A10] font-semibold text-[10px] hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-2xs"
+            >
+              Set Bookmark
+            </button>
+          </motion.div>
+        )}
         {/* Shloka Stepper Header */}
         <div className="flex items-center justify-between px-2 py-1">
           <button

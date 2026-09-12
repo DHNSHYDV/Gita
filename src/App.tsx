@@ -78,7 +78,7 @@ export const AppContent: React.FC = () => {
   // Listen to daily early morning wisdom notification clicks to open verse
   useEffect(() => {
     const unregister = registerNotificationClickListener((chapter, verse) => {
-      navigateToShloka(chapter, verse);
+      navigateToShloka(chapter, verse, false);
     });
     return () => {
       unregister();

@@ -30,7 +30,9 @@ interface AppContextType {
   lastRead: { chapter: number; verse: number };
   setLastRead: (pos: { chapter: number; verse: number }) => void;
   readingHistory: { chapter: number; verse: number; date: string }[];
-  navigateToShloka: (chapter: number, verse: number) => void;
+  navigateToShloka: (chapter: number, verse: number, updateLastRead?: boolean) => void;
+  isDailyVerseView: boolean;
+  setIsDailyVerseView: (val: boolean) => void;
   t: UIStrings;
   openSettingsFromScreen: ScreenType | null;
   setOpenSettingsFromScreen: (screen: ScreenType | null) => void;
@@ -174,6 +176,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [dailyVerseModalOpen, setDailyVerseModalOpen] = useState<boolean>(false);
+  const [isDailyVerseView, setIsDailyVerseView] = useState<boolean>(false);
   const [dailyReminderEnabled, setDailyReminderEnabledState] = useState<boolean>(() => {
     const saved = localStorage.getItem('gita_daily_reminder');
     return saved !== null ? JSON.parse(saved) : true;
@@ -267,10 +270,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return bookmarks.includes(verseId);
   };
 
-  const navigateToShloka = (chapter: number, verse: number) => {
+  const navigateToShloka = (chapter: number, verse: number, updateLastRead: boolean = true) => {
     setSelectedChapter(chapter);
     setSelectedVerse(verse);
-    setLastRead({ chapter, verse });
+    setIsDailyVerseView(!updateLastRead);
+    if (updateLastRead) {
+      setLastRead({ chapter, verse });
+    }
     setReadingHistory(prev => {
       const updated = [
         { chapter, verse, date: 'Just now' },
@@ -456,6 +462,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setLastRead,
         readingHistory,
         navigateToShloka,
+        isDailyVerseView,
+        setIsDailyVerseView,
         t,
         openSettingsFromScreen,
         setOpenSettingsFromScreen,

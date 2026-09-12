@@ -48,7 +48,7 @@ export const DailyVerseModal: React.FC = () => {
 
   const handleReadInContext = () => {
     setDailyVerseModalOpen(false);
-    navigateToShloka(currentRef.chapter, currentRef.verse);
+    navigateToShloka(currentRef.chapter, currentRef.verse, false);
   };
 
   const titles: Record<string, string> = {
