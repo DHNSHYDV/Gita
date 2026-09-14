@@ -284,7 +284,34 @@ export async function deleteUserAccount(): Promise<{ success: boolean; error: Er
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      // 1. Delete user row from profiles table
+      // 1. Fetch profile before deleting so we can record audit history
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, streak, last_read')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        const lr = (profile.last_read || {}) as Record<string, unknown>;
+        const streak = typeof profile.streak === 'number' ? profile.streak : 0;
+        const listened = Array.isArray(lr.listened_verses) ? lr.listened_verses.length : 0;
+        const points = typeof lr.points === 'number' ? lr.points : (listened + streak * 5);
+        const username = profile.username || user.user_metadata?.full_name || 'Devotee';
+
+        // 2. Record in deleted_accounts audit table
+        try {
+          await supabase.from('deleted_accounts').insert({
+            username,
+            points,
+            streak,
+            deleted_at: new Date().toISOString(),
+          });
+        } catch (logErr) {
+          console.warn('Warning writing deletion audit log:', logErr);
+        }
+      }
+
+      // 3. Delete user row from profiles table
       const { error: deleteProfileError } = await supabase
         .from('profiles')
         .delete()
@@ -294,7 +321,7 @@ export async function deleteUserAccount(): Promise<{ success: boolean; error: Er
         console.warn('Warning during profile record deletion:', deleteProfileError);
       }
 
-      // 2. Sign out of Supabase auth session
+      // 4. Sign out of Supabase auth session
       await supabase.auth.signOut();
     }
 

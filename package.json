@@ -1,12 +1,13 @@
 {
   "name": "gita-app",
   "private": true,
-  "version": "1.6.1",
+  "version": "1.6.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
     "build:ota": "npm run build && python3 scripts/build-ota.py",
+    "devotees": "python3 scripts/view-devotees.py",
     "postinstall": "node scripts/patch-capgo.cjs",
     "preview": "vite preview"
   },
