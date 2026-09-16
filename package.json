@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "build:ota": "npm run build && python3 scripts/build-ota.py",
     "devotees": "python3 scripts/view-devotees.py",
+    "publish:release": "python3 scripts/publish-release.py",
     "postinstall": "node scripts/patch-capgo.cjs",
     "preview": "vite preview"
   },

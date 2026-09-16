@@ -12,6 +12,45 @@ import {
 import { downloadAndApplyLiveUpdate } from '../utils/ota';
 import { Capacitor } from '@capacitor/core';
 
+// Clean and format release highlights into simple, professional user-facing bullet points
+function parseReleaseHighlights(body: string): string[] {
+  if (!body) return ['Performance improvements and smoother reading experience.'];
+
+  const lines = body.split('\n');
+  const items: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Ignore markdown headings or headers (#, ##, ###)
+    if (/^#+\s*/.test(trimmed)) continue;
+    if (/^Highlights/i.test(trimmed) || /^What's New/i.test(trimmed) || /Release Highlights/i.test(trimmed)) continue;
+
+    // Clean up markdown formatting: bullets, asterisks, backticks, stray hashes
+    let cleaned = trimmed
+      .replace(/^[-*•]\s*/, '') // remove leading bullets
+      .replace(/\*\*(.*?)\*\*/g, '$1') // remove bold
+      .replace(/\*(.*?)\*/g, '$1') // remove italic
+      .replace(/`([^`]+)`/g, '$1') // remove backticks
+      .replace(/^#+\s*/, '') // remove any stray hashes
+      .trim();
+
+    // Skip developer-only metadata lines
+    if (/^Live OTA Bundle/i.test(cleaned) || /^Download/i.test(cleaned) || /^http/i.test(cleaned)) {
+      continue;
+    }
+
+    if (cleaned.length > 0) {
+      items.push(cleaned);
+    }
+  }
+
+  return items.length > 0
+    ? items.slice(0, 4)
+    : ['Performance improvements and reading experience enhancements.'];
+}
+
 export const UpdateModal: React.FC = () => {
   const [release, setRelease] = useState<AppRelease | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -107,7 +146,7 @@ export const UpdateModal: React.FC = () => {
             </div>
 
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#C59341]/15 text-[#A27222] dark:text-[#E8C581] text-[11px] font-semibold tracking-wide uppercase mb-1.5">
-              <span>New Sacred Update</span>
+              <span>New Update Available</span>
             </div>
 
             <h2 className="font-serif font-bold text-xl md:text-2xl text-[#2A241E] dark:text-[#FAF7F2]">
@@ -118,15 +157,19 @@ export const UpdateModal: React.FC = () => {
             </p>
           </div>
 
-          {/* Release Highlights Snippet */}
-          <div className="mt-4 p-3.5 rounded-2xl bg-[#EFE7DA]/70 dark:bg-[#231D17]/70 border border-[#E2D5C0] dark:border-[#332A20] text-xs text-[#524638] dark:text-[#C5B9A7] space-y-1.5 max-h-36 overflow-y-auto">
-            <p className="font-semibold text-[#8C6422] dark:text-[#E8C581] flex items-center gap-1">
-              <ArrowRight className="w-3 h-3" /> Highlights in this release:
+          {/* Release Highlights Box */}
+          <div className="mt-4 p-3.5 rounded-2xl bg-[#EFE7DA]/70 dark:bg-[#231D17]/70 border border-[#E2D5C0] dark:border-[#332A20] text-xs text-[#524638] dark:text-[#C5B9A7] space-y-2 max-h-40 overflow-y-auto">
+            <p className="font-semibold text-[#8C6422] dark:text-[#E8C581] flex items-center gap-1.5 text-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#C59341]" /> What's new:
             </p>
-            <p className="leading-relaxed whitespace-pre-line">
-              {release.body.replace(/##/g, '').replace(/###/g, '•').slice(0, 240)}
-              {release.body.length > 240 ? '...' : ''}
-            </p>
+            <ul className="space-y-1.5 pl-0.5">
+              {parseReleaseHighlights(release.body).map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2 leading-relaxed text-[11.5px]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C59341] mt-1.5 shrink-0" />
+                  <span className="flex-1">{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Action Buttons: Purely Over-The-Air (OTA) Live Update */}
