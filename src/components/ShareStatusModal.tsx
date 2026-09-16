@@ -72,7 +72,16 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, data.chapter, data.verse, data.language, data.sanskrit, data.bhavartham]);
+  }, [
+    isOpen,
+    data.chapter,
+    data.verse,
+    data.language,
+    data.sanskrit,
+    data.bhavartham,
+    data.isDaily,
+    data.cardTitle,
+  ]);
 
   if (!isOpen) return null;
 
@@ -141,7 +150,7 @@ export const ShareStatusModal: React.FC<ShareStatusModalProps> = ({
               </div>
               <div>
                 <h3 className="font-serif font-bold text-sm text-[#2A2219] dark:text-[#FAF6EE]">
-                  My Shloka Today
+                  {data.cardTitle || (data.isDaily ? 'My Shloka Today' : 'Bhagavad Gita Shloka')}
                 </h3>
                 <p className="text-[11px] text-[#8C7E6C] dark:text-[#9F9382]">
                   Bhagavad Gita {data.chapter}.{data.verse}

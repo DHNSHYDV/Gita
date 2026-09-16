@@ -12,6 +12,8 @@ export interface VerseShareData {
   transliteration?: string;
   bhavartham: string;
   language: Language;
+  isDaily?: boolean;
+  cardTitle?: string;
 }
 
 export { APP_SHARE_URL };
@@ -369,11 +371,12 @@ export function generateVerseCardCanvas(data: VerseShareData): HTMLCanvasElement
   ctx.fillStyle = '#91631F';
   ctx.fillText('ॐ', width / 2, headerY + 2);
 
-  // Main Title: "MY SHLOKA TODAY"
+  // Main Title: "MY SHLOKA TODAY" vs "BHAGAVAD GITA" (or custom cardTitle)
+  const cardTitle = data.cardTitle || (data.isDaily ? 'MY SHLOKA TODAY' : 'BHAGAVAD GITA');
   ctx.font = "700 34px 'Cinzel', 'Playfair Display', Georgia, serif";
   ctx.letterSpacing = '8px';
   ctx.fillStyle = '#6E491A';
-  ctx.fillText('MY SHLOKA TODAY', width / 2, headerY + 84);
+  ctx.fillText(cardTitle, width / 2, headerY + 84);
   ctx.letterSpacing = '0px';
 
   // Subtitle: Dynamic Chapter & Verse
@@ -538,8 +541,9 @@ export async function generateVerseCardDataUrl(
  * Associates the Gita application landing URL without printing raw URLs onto the devotional image.
  */
 export function formatStatusCaption(data: VerseShareData): string {
+  const header = data.isDaily ? 'My Shloka Today 🙏' : 'Bhagavad Gita 🙏';
   return (
-    `My Shloka Today 🙏\n\n` +
+    `${header}\n\n` +
     `Bhagavad Gita Chapter ${data.chapter}, Verse ${data.verse}\n\n` +
     `${APP_SHARE_URL}`
   );

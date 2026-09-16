@@ -170,11 +170,11 @@ def publish_release(tag: str, title: str, highlights: list[str]):
 
 if __name__ == '__main__':
     publish_release(
-        tag='v1.6.5',
-        title='Gita v1.6.5 - Maximum Font Size Shloka Scroll & Meaning Audio Fix',
+        tag='v1.6.6',
+        title='Gita v1.6.6 - Dynamic WhatsApp Status & Story Sharing',
         highlights=[
-            'Maximum Font Size Support: Full vertical scrolling enabled so you can read large text comfortably without anything cut off.',
-            'Meaning & Purport Access: Complete view of all verse explanations and easy access to the regional voice Listen button.',
-            'Docked Navigation: Prev and Next buttons are neatly docked at the bottom and never overlap your reading.'
+            'Smart Sharing Templates: Automatically switches between My Shloka Today for daily verses and Bhagavad Gita for verses explored across chapters.',
+            'Accurate Story Headings: Devotional story cards and WhatsApp captions now perfectly match what you are reading.',
+            'Enhanced Social Previews: Clean typography and formatting tailored for WhatsApp Status and Instagram Stories.'
         ]
     )

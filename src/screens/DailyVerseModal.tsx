@@ -158,6 +158,7 @@ export const DailyVerseModal: React.FC = () => {
           transliteration: verseData.transliteration,
           bhavartham: translationData.translation,
           language,
+          isDaily: true,
         }}
       />
     </>

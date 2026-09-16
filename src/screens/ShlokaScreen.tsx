@@ -616,6 +616,7 @@ export const ShlokaScreen: React.FC = () => {
               transliteration: vData.transliteration,
               bhavartham: tData.translation,
               language,
+              isDaily: isDailyVerseView,
             }}
           />
         );
