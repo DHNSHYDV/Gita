@@ -164,7 +164,7 @@ export const AppContent: React.FC = () => {
           initial="enter"
           animate="center"
           exit="exit"
-          className="w-full min-h-full"
+          className="w-full min-h-full flex-1 flex flex-col"
         >
           {renderScreen()}
         </motion.div>

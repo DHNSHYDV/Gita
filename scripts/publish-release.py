@@ -170,11 +170,11 @@ def publish_release(tag: str, title: str, highlights: list[str]):
 
 if __name__ == '__main__':
     publish_release(
-        tag='v1.6.4',
-        title='Gita v1.6.4 - Shloka Scrolling & Meaning Audio Access',
+        tag='v1.6.5',
+        title='Gita v1.6.5 - Maximum Font Size Shloka Scroll & Meaning Audio Fix',
         highlights=[
-            'Shloka Reading: Restored smooth vertical scrolling so you can easily read full verses, translations, and purports.',
-            'Audio Explanation: Easy access to listen to regional voice recitations of meanings and purports.',
-            'Performance & Gestures: Smooth touch gestures and effortless page reading throughout the app.'
+            'Maximum Font Size Support: Full vertical scrolling enabled so you can read large text comfortably without anything cut off.',
+            'Meaning & Purport Access: Complete view of all verse explanations and easy access to the regional voice Listen button.',
+            'Docked Navigation: Prev and Next buttons are neatly docked at the bottom and never overlap your reading.'
         ]
     )

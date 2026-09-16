@@ -323,6 +323,14 @@ export const ShlokaScreen: React.FC = () => {
 
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
+  const scrollContainerRef = useRef<HTMLElement>(null);
+
+  // Reset scroll position to top when turning to a new verse
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [selectedChapter, selectedVerse]);
 
   const currentChapterData = CHAPTERS_DATA.find((c) => c.number === selectedChapter) || CHAPTERS_DATA[1];
   const totalVersesInChapter = currentChapterData.versesCount;
@@ -449,14 +457,9 @@ export const ShlokaScreen: React.FC = () => {
   const bookmarked = isBookmarked(currentVerseId);
 
   return (
-    <div
-      className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-32 transition-colors select-none touch-pan-y"
-      style={{ touchAction: 'pan-y' }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Top Header - Brought 1 cm below top to keep blank safe region */}
-      <header className="sticky top-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))] pb-3 flex items-center justify-between border-b border-[#EAE2D5] dark:border-[#28221B]">
+    <div className="h-screen h-[100dvh] max-h-[100dvh] w-full flex flex-col overflow-hidden bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] transition-colors select-none">
+      {/* Top Header - Fixed at top of flex container */}
+      <header className="flex-shrink-0 z-20 bg-[#F6F1EA]/95 dark:bg-[#141210]/95 backdrop-blur-md px-4 pt-[max(2.75rem,env(safe-area-inset-top,2.75rem))] pb-3 flex items-center justify-between border-b border-[#EAE2D5] dark:border-[#28221B]">
         <button
           onClick={handleBack}
           className="p-2 rounded-full hover:bg-[#EAE0D0] dark:hover:bg-[#25201A] transition-colors active:scale-95"
@@ -492,8 +495,14 @@ export const ShlokaScreen: React.FC = () => {
         </button>
       </header>
 
-      {/* Main Reading Page */}
-      <main className="px-5 py-4 max-w-md md:max-w-xl mx-auto space-y-4">
+      {/* Main Reading Page: Dedicated Scroll Container */}
+      <main
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 max-w-md md:max-w-xl mx-auto w-full space-y-4 touch-pan-y"
+        style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Daily Verse Context Notice */}
         {isDailyVerseView && (
           <motion.div
@@ -573,6 +582,9 @@ export const ShlokaScreen: React.FC = () => {
             direction={turnDirection === 'next' ? 1 : -1}
           />
         </AnimatePresence>
+
+        {/* Generous bottom cushion so content easily scrolls well clear of footer on maximum text size */}
+        <div className="h-16 shrink-0" />
       </main>
 
       {/* Discreet Bookmark Confirmation Pill */}
@@ -609,8 +621,8 @@ export const ShlokaScreen: React.FC = () => {
         );
       })()}
 
-      {/* Floating Bottom Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md md:max-w-xl mx-auto bg-[#FAF7F2]/95 dark:bg-[#181512]/95 backdrop-blur-md border-t border-[#EAE2D5] dark:border-[#28221B] px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] z-30 flex items-center justify-between shadow-lg">
+      {/* Bottom Navigation - Docked cleanly at bottom of flex column */}
+      <footer className="flex-shrink-0 z-20 w-full bg-[#FAF7F2]/95 dark:bg-[#181512]/95 backdrop-blur-md border-t border-[#EAE2D5] dark:border-[#28221B] px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] flex items-center justify-between shadow-lg">
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={handlePrevVerse}
