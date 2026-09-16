@@ -176,6 +176,35 @@ export interface RealLeaderboardDevotee {
   isCurrentUser?: boolean;
 }
 
+const LEADERBOARD_CACHE_KEY = 'gita_cached_leaderboard';
+const DEVOTEE_COUNT_CACHE_KEY = 'gita_cached_devotee_count';
+
+export function getCachedLeaderboard(): RealLeaderboardDevotee[] {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(LEADERBOARD_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return [];
+}
+
+export function getCachedDevoteeCount(): number {
+  if (typeof localStorage === 'undefined') return 1;
+  try {
+    const raw = localStorage.getItem(DEVOTEE_COUNT_CACHE_KEY);
+    if (raw) {
+      const parsed = parseInt(raw, 10);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+  } catch {}
+  return 1;
+}
+
 export async function fetchLeaderboard(): Promise<RealLeaderboardDevotee[]> {
   try {
     const { data, error } = await supabase
@@ -186,7 +215,7 @@ export async function fetchLeaderboard(): Promise<RealLeaderboardDevotee[]> {
 
     if (error || !data) {
       console.warn('Leaderboard query warning:', error);
-      return [];
+      return getCachedLeaderboard();
     }
 
     const devotees = data.map((item) => {
@@ -208,13 +237,22 @@ export async function fetchLeaderboard(): Promise<RealLeaderboardDevotee[]> {
     // Rank primarily by Points DESC, secondarily by Streak DESC
     devotees.sort((a, b) => b.points - a.points || b.streakDays - a.streakDays);
 
-    return devotees.map((d, index) => ({
+    const ranked = devotees.map((d, index) => ({
       ...d,
       rank: index + 1,
     }));
+
+    // Cache locally for instant next-load with zero latency
+    try {
+      if (typeof localStorage !== 'undefined' && ranked.length > 0) {
+        localStorage.setItem(LEADERBOARD_CACHE_KEY, JSON.stringify(ranked));
+      }
+    } catch {}
+
+    return ranked;
   } catch (err) {
     console.warn('Error fetching leaderboard:', err);
-    return [];
+    return getCachedLeaderboard();
   }
 }
 
@@ -226,11 +264,18 @@ export async function fetchRegisteredDevoteeCount(): Promise<number> {
       .select('*', { count: 'exact', head: true });
 
     if (error || typeof count !== 'number') {
-      return 1;
+      return getCachedDevoteeCount();
     }
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(DEVOTEE_COUNT_CACHE_KEY, String(count));
+      }
+    } catch {}
+
     return count;
   } catch {
-    return 1;
+    return getCachedDevoteeCount();
   }
 }
 

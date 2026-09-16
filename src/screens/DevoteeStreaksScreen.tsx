@@ -3,32 +3,57 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, Crown, Calendar, Sparkles, CheckCircle2, ChevronLeft, Award } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getStoredStreak } from '../data/db';
-import { fetchLeaderboard, fetchRegisteredDevoteeCount, type RealLeaderboardDevotee, getCurrentUser } from '../utils/supabase';
+import {
+  fetchLeaderboard,
+  fetchRegisteredDevoteeCount,
+  getCachedLeaderboard,
+  getCachedDevoteeCount,
+  type RealLeaderboardDevotee,
+  getCurrentUser
+} from '../utils/supabase';
 
 export const DevoteeStreaksScreen: React.FC = () => {
   const { userName, goBack, sadhanaPoints, listenedVerses, t } = useApp();
   const [activeTab, setActiveTab] = useState<'top' | 'my' | 'community'>('top');
   const [period, setPeriod] = useState<'today' | 'week' | 'all'>('today');
-  const [cloudLeaderboard, setCloudLeaderboard] = useState<RealLeaderboardDevotee[]>([]);
-  const [devoteeCount, setDevoteeCount] = useState<number>(1);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [cloudLeaderboard, setCloudLeaderboard] = useState<RealLeaderboardDevotee[]>(() => getCachedLeaderboard());
+  const [devoteeCount, setDevoteeCount] = useState<number>(() => getCachedDevoteeCount());
+  const [currentUserId, setCurrentUserId] = useState<string | null>(() => {
+    if (typeof localStorage === 'undefined') return null;
+    return localStorage.getItem('gita_cached_user_id') || null;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => getCachedLeaderboard().length === 0);
 
   const streakInfo = getStoredStreak();
   const todayStr = new Date().toISOString().split('T')[0];
   const isActiveToday = streakInfo.lastReadDate === todayStr;
 
   useEffect(() => {
+    let isMounted = true;
     const loadRealData = async () => {
       const user = await getCurrentUser();
-      if (user) setCurrentUserId(user.id);
+      if (user && isMounted) {
+        setCurrentUserId(user.id);
+        try {
+          localStorage.setItem('gita_cached_user_id', user.id);
+        } catch {}
+      }
 
       const list = await fetchLeaderboard();
-      setCloudLeaderboard(list);
+      if (isMounted) {
+        setCloudLeaderboard(list);
+        setIsLoading(false);
+      }
 
       const count = await fetchRegisteredDevoteeCount();
-      setDevoteeCount(count);
+      if (isMounted) {
+        setDevoteeCount(count);
+      }
     };
     loadRealData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Compute live leaderboard (merge current user if not yet in database)
@@ -36,7 +61,7 @@ export const DevoteeStreaksScreen: React.FC = () => {
     if (cloudLeaderboard.length === 0) {
       return [
         {
-          id: 'me',
+          id: currentUserId || 'me',
           rank: 1,
           name: `${userName || 'You'}`,
           streakDays: streakInfo.currentStreak,
@@ -244,17 +269,18 @@ export const DevoteeStreaksScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Ranked List with Staggered Entrance */}
+            {/* Ranked List - Seamless & Instant */}
             <div className="space-y-2.5">
-              {displayLeaderboard.map((item, idx) => {
+              {displayLeaderboard.map((item) => {
                 const isCurrent = item.isCurrentUser;
 
                 return (
                   <motion.div
-                    key={item.name}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.03, duration: 0.25 }}
+                    key={item.id || item.name}
+                    layout="position"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
                     whileTap={{ scale: 0.99 }}
                     className={`flex items-center justify-between p-3.5 rounded-2xl transition-all shadow-xs ${
                       isCurrent
@@ -325,6 +351,33 @@ export const DevoteeStreaksScreen: React.FC = () => {
                   </motion.div>
                 );
               })}
+
+              {/* Sleek skeleton placeholders for remaining ranks on first cold load */}
+              {isLoading && cloudLeaderboard.length === 0 && (
+                <>
+                  {[2, 3].map((sk) => (
+                    <div
+                      key={`sk-${sk}`}
+                      className="flex items-center justify-between p-3.5 rounded-2xl bg-[#FAF7F2]/60 dark:bg-[#1C1813]/60 border border-[#E8E1D5]/60 dark:border-[#2D261E]/60 animate-pulse"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 flex justify-center text-xs font-bold text-[#8A7E6C]/50">
+                          {sk}
+                        </div>
+                        <div className="w-9 h-9 rounded-full bg-[#EAE0D0]/80 dark:bg-[#2A231A]/80" />
+                        <div className="space-y-1.5">
+                          <div className="w-24 h-3.5 bg-[#EAE0D0]/80 dark:bg-[#2A231A]/80 rounded" />
+                          <div className="w-32 h-2.5 bg-[#EAE0D0]/50 dark:bg-[#2A231A]/50 rounded" />
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <div className="w-12 h-6 rounded-full bg-[#EAE0D0]/80 dark:bg-[#2A231A]/80" />
+                        <div className="w-14 h-6 rounded-full bg-[#EAE0D0]/80 dark:bg-[#2A231A]/80" />
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
 
             {/* Bottom Motivation Card */}
