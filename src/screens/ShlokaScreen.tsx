@@ -450,7 +450,8 @@ export const ShlokaScreen: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-32 transition-colors select-none"
+      className="min-h-screen bg-[#F6F1EA] dark:bg-[#141210] text-[#2A241E] dark:text-[#E8E0D2] pb-32 transition-colors select-none touch-pan-y"
+      style={{ touchAction: 'pan-y' }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >

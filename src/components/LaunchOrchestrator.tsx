@@ -43,14 +43,14 @@ export const LaunchOrchestrator: React.FC<LaunchOrchestratorProps> = ({ children
   }, [isReturningUser, currentScreen, shouldReduceMotion]);
 
   return (
-    <div className="relative w-full h-full min-h-screen bg-[#FCF3DC] dark:bg-[#141210] overflow-hidden">
+    <div className="relative w-full min-h-screen bg-[#FCF3DC] dark:bg-[#141210] overflow-x-hidden">
       {/* 
         The actual application content is MOUNTED from Frame 0.
         It is visually revealed underneath as the golden aura expands.
         Zero unmounts, zero blank frames, zero layout jumps.
       */}
       <div
-        className={`w-full h-full min-h-screen transition-opacity duration-500 ease-out ${
+        className={`w-full min-h-screen transition-opacity duration-500 ease-out ${
           phase === 'morphing' || phase === 'complete' || !isReturningUser || currentScreen === 'welcome'
             ? 'opacity-100'
             : 'opacity-0'

@@ -170,11 +170,11 @@ def publish_release(tag: str, title: str, highlights: list[str]):
 
 if __name__ == '__main__':
     publish_release(
-        tag='v1.6.3',
-        title='Gita v1.6.3 - Seamless Sadhana Circle & Performance Improvements',
+        tag='v1.6.4',
+        title='Gita v1.6.4 - Shloka Scrolling & Meaning Audio Access',
         highlights=[
-            'Sadhana Circle: All fellow seekers and your daily streak now appear instantly with ultra-smooth transitions.',
-            'Offline Experience: Instant progress loading so you never wait when checking streaks and points.',
-            'Performance & Stability: Enhanced animations and seamless screen transitions throughout the app.'
+            'Shloka Reading: Restored smooth vertical scrolling so you can easily read full verses, translations, and purports.',
+            'Audio Explanation: Easy access to listen to regional voice recitations of meanings and purports.',
+            'Performance & Gestures: Smooth touch gestures and effortless page reading throughout the app.'
         ]
     )
