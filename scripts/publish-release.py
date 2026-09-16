@@ -153,25 +153,28 @@ def publish_release(tag: str, title: str, highlights: list[str]):
     else:
         print(f"Warning: {dist_zip} not found! Run 'npm run build:ota' first.")
 
-    # 3. Upload release APK
-    apk_file = f"/home/dhnshydv/Gita/gita-{tag}-release.apk"
-    if not os.path.exists(apk_file):
-        apk_file = '/home/dhnshydv/Gita/android/app/build/outputs/apk/release/app-release.apk'
-    
-    if os.path.exists(apk_file):
-        upload_asset(release, apk_file, f"gita-{tag}-release.apk", 'application/vnd.android.package-archive')
+    # 3. Upload release APK (optional if running in --ota-only mode)
+    if '--ota-only' in sys.argv:
+        print("⚡ Mode: --ota-only enabled. Skipping APK upload to conserve mobile data (~10.5 MB saved).")
     else:
-        print(f"Warning: APK file not found at {apk_file}!")
+        apk_file = f"/home/dhnshydv/Gita/gita-{tag}-release.apk"
+        if not os.path.exists(apk_file):
+            apk_file = '/home/dhnshydv/Gita/android/app/build/outputs/apk/release/app-release.apk'
+        
+        if os.path.exists(apk_file):
+            upload_asset(release, apk_file, f"gita-{tag}-release.apk", 'application/vnd.android.package-archive')
+        else:
+            print(f"Notice: APK file not found at {apk_file}. OTA bundle uploaded successfully.")
 
     print("\n🎉 Release and OTA assets successfully published with clean, professional highlights!")
 
 if __name__ == '__main__':
     publish_release(
-        tag='v1.6.2',
-        title='Gita v1.6.2 - Account Privacy & Performance Improvements',
+        tag='v1.6.3',
+        title='Gita v1.6.3 - Seamless Sadhana Circle & Performance Improvements',
         highlights=[
-            'Account Management: Easily delete or reset your profile directly from app settings with complete privacy.',
-            'Reading Progress: Seamlessly save bookmarks, audio progress, and daily reading streaks.',
-            'Performance & Speed: Faster screen loading and smoother transitions throughout the app.'
+            'Sadhana Circle: All fellow seekers and your daily streak now appear instantly with ultra-smooth transitions.',
+            'Offline Experience: Instant progress loading so you never wait when checking streaks and points.',
+            'Performance & Stability: Enhanced animations and seamless screen transitions throughout the app.'
         ]
     )
